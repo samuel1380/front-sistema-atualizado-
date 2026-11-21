@@ -1,0 +1,348 @@
+<div class="logs-page">
+  <!-- Cabeçalho moderno -->
+  <section class="logs-hero">
+    <div class="hero-copy">
+      <div class="hero-eyebrow">
+        <span class="pulse-dot" [class.live]="autoAtualizar"></span>
+        Auditoria & Rastreabilidade em Tempo Real
+      </div>
+      <h1>Logs de Atividades do Sistema</h1>
+      <p>
+        Acompanhe todas as criações, edições, exclusões e acessos realizados nos módulos de
+        Trabalhos, Financeiro, Faturas, Logística, Estoque e Cadastros.
+      </p>
+    </div>
+
+    <div class="hero-actions">
+      <button
+        type="button"
+        class="btn-toggle-live"
+        [class.active]="autoAtualizar"
+        (click)="toggleAutoAtualizar()"
+        title="Atualizar automaticamente a cada 5 segundos"
+      >
+        <i class="ri-radar-line"></i>
+        <span>{{ autoAtualizar ? 'Tempo real: ON' : 'Tempo real: OFF' }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        (click)="exportarCsv()"
+        [disabled]="logs.length === 0"
+      >
+        <i class="ri-download-2-line"></i>
+        <span>Exportar CSV</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn-primary"
+        (click)="carregarLogs()"
+        [disabled]="carregando"
+      >
+        <i class="ri-refresh-line" [class.spin]="carregando"></i>
+        <span>Atualizar</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Cards de resumo (KPIs) -->
+  <section class="kpi-grid">
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon"><i class="ri-file-list-3-line"></i></div>
+      <div class="kpi-info">
+        <span class="kpi-label">Registros Encontrados</span>
+        <strong class="kpi-value">{{ resumo.totalGeral | number:'1.0-0':'pt-BR' }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-criacao">
+      <div class="kpi-icon"><i class="ri-add-circle-line"></i></div>
+      <div class="kpi-info">
+        <span class="kpi-label">Criações</span>
+        <strong class="kpi-value">{{ resumo.criacoes | number:'1.0-0':'pt-BR' }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-atualizacao">
+      <div class="kpi-icon"><i class="ri-edit-2-line"></i></div>
+      <div class="kpi-info">
+        <span class="kpi-label">Alterações</span>
+        <strong class="kpi-value">{{ resumo.atualizacoes | number:'1.0-0':'pt-BR' }}</strong>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-exclusao">
+      <div class="kpi-icon"><i class="ri-delete-bin-6-line"></i></div>
+      <div class="kpi-info">
+        <span class="kpi-label">Exclusões · Logins</span>
+        <strong class="kpi-value">
+          {{ resumo.exclusoes | number:'1.0-0':'pt-BR' }}
+          <small>/ {{ resumo.logins | number:'1.0-0':'pt-BR' }}</small>
+        </strong>
+      </div>
+    </div>
+  </section>
+
+  <!-- Barra de filtros -->
+  <section class="filters-card">
+    <div class="filters-top">
+      <div class="search-box">
+        <i class="ri-search-line"></i>
+        <input
+          type="text"
+          [(ngModel)]="busca"
+          (ngModelChange)="onFiltroTextoChange()"
+          placeholder="Buscar por usuário, resumo, entidade, ID (#), campo alterado ou IP..."
+        />
+        <button
+          type="button"
+          class="clear-input"
+          *ngIf="busca"
+          (click)="busca = ''; aplicarFiltros()"
+        >
+          <i class="ri-close-line"></i>
+        </button>
+      </div>
+
+      <div class="quick-dates">
+        <button type="button" class="chip-btn" (click)="aplicarPeriodoRapido('hoje')">Hoje</button>
+        <button type="button" class="chip-btn" (click)="aplicarPeriodoRapido('7d')">Últimos 7 dias</button>
+        <button type="button" class="chip-btn" (click)="aplicarPeriodoRapido('mes')">Este mês</button>
+        <button
+          type="button"
+          class="chip-btn chip-reset"
+          *ngIf="temFiltrosAtivos"
+          (click)="limparFiltros()"
+        >
+          <i class="ri-filter-off-line"></i> Limpar
+        </button>
+      </div>
+    </div>
+
+    <div class="filters-grid">
+      <div class="filter-field">
+        <label>Módulo</label>
+        <select [(ngModel)]="modulo" (change)="aplicarFiltros()">
+          <option value="">Todos os módulos</option>
+          <option *ngFor="let m of modulosDisponiveis" [value]="m">{{ m }}</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Tipo de Ação</label>
+        <select [(ngModel)]="acao" (change)="aplicarFiltros()">
+          <option value="">Todas as ações</option>
+          <option value="CRIACAO">Criação</option>
+          <option value="ATUALIZACAO">Alteração</option>
+          <option value="EXCLUSAO">Exclusão</option>
+          <option value="LOGIN">Login</option>
+          <option value="ACAO">Ação</option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Usuário</label>
+        <select [(ngModel)]="idUsuario" (ngModelChange)="aplicarFiltros()">
+          <option [ngValue]="null">Todos os usuários</option>
+          <option *ngFor="let u of usuariosDisponiveis" [ngValue]="u.idUsuario">
+            {{ u.nomeUsuario }}
+          </option>
+        </select>
+      </div>
+
+      <div class="filter-field">
+        <label>Data Inicial</label>
+        <input type="date" [(ngModel)]="dataInicio" (change)="aplicarFiltros()" />
+      </div>
+
+      <div class="filter-field">
+        <label>Data Final</label>
+        <input type="date" [(ngModel)]="dataFim" (change)="aplicarFiltros()" />
+      </div>
+    </div>
+  </section>
+
+  <!-- Erro -->
+  <div class="alert-error" *ngIf="erro">
+    <i class="ri-error-warning-line"></i>
+    <span>{{ erro }}</span>
+  </div>
+
+  <!-- Tabela principal de Logs -->
+  <section class="table-card">
+    <div class="table-toolbar">
+      <div class="table-meta">
+        <span>
+          Exibindo <strong>{{ logs.length }}</strong> de
+          <strong>{{ total | number:'1.0-0':'pt-BR' }}</strong> eventos
+        </span>
+        <span class="updated-at" *ngIf="ultimaAtualizacao">
+          · Atualizado às {{ ultimaAtualizacao | date:'HH:mm:ss' }}
+        </span>
+      </div>
+
+      <div class="page-size-wrap">
+        <label>Por página:</label>
+        <select [(ngModel)]="limit" (change)="onLimitChange()">
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="30">30</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="loading-bar" *ngIf="carregando">
+      <div class="loading-bar-inner"></div>
+    </div>
+
+    <div class="table-scroll" *ngIf="logs.length > 0">
+      <table class="logs-table">
+        <thead>
+          <tr>
+            <th>Data e Hora</th>
+            <th>Usuário</th>
+            <th>Ação</th>
+            <th>Módulo / Registro</th>
+            <th>O que foi alterado</th>
+            <th class="text-right">Inspeção</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs" (click)="abrirDetalhes(log)" class="log-row">
+            <td class="col-datetime">
+              <div class="dt-primary">{{ log.dataHora | date:'dd/MM/yyyy' }}</div>
+              <div class="dt-secondary">
+                <span class="dt-time">{{ log.dataHora | date:'HH:mm:ss' }}</span>
+                <span class="dt-rel" *ngIf="getTempoRelativo(log.dataHora)">
+                  · {{ getTempoRelativo(log.dataHora) }}
+                </span>
+              </div>
+            </td>
+
+            <td class="col-user">
+              <div class="user-cell">
+                <div
+                  class="user-avatar"
+                  [style.background]="getAvatarColor(log.nomeUsuario)"
+                >
+                  {{ getIniciais(log.nomeUsuario) }}
+                </div>
+                <div class="user-text">
+                  <div class="user-name">{{ log.nomeUsuario || 'Sistema (Automático)' }}</div>
+                  <div class="user-email">
+                    {{ log.emailUsuario || (log.ip ? 'IP ' + log.ip : 'Processo interno') }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <td class="col-acao">
+              <span class="acao-badge" [ngClass]="getAcaoBadgeClass(log.acao)">
+                <i [class]="getAcaoIcon(log.acao)"></i>
+                {{ getAcaoLabel(log.acao) }}
+              </span>
+            </td>
+
+            <td class="col-modulo">
+              <div class="modulo-tag">{{ log.modulo }}</div>
+              <div class="entidade-sub">
+                {{ log.entidade }}<span *ngIf="log.idRegistro"> #{{ log.idRegistro }}</span>
+              </div>
+            </td>
+
+            <td class="col-resumo">
+              <div class="resumo-text">{{ log.resumo }}</div>
+              <div
+                class="diff-preview-list"
+                *ngIf="log.camposAlterados && log.camposAlterados.length > 0"
+              >
+                <span
+                  class="diff-pill"
+                  *ngFor="let c of log.camposAlterados | slice:0:2"
+                >
+                  <strong>{{ c.label }}:</strong>
+                  <span class="old" *ngIf="log.acao === 'ATUALIZACAO' && c.antes !== null">
+                    {{ formatarValorCurto(c.antes) }} →
+                  </span>
+                  <span class="new">{{ formatarValorCurto(c.depois) }}</span>
+                </span>
+                <span class="diff-more" *ngIf="log.camposAlterados.length > 2">
+                  +{{ log.camposAlterados.length - 2 }} campo(s)
+                </span>
+              </div>
+            </td>
+
+            <td class="col-actions text-right" (click)="$event.stopPropagation()">
+              <button type="button" class="btn-inspect" (click)="abrirDetalhes(log)">
+                <i class="ri-eye-line"></i>
+                <span>Detalhes</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Estado vazio -->
+    <div class="empty-state" *ngIf="!carregando && logs.length === 0">
+      <div class="empty-icon"><i class="ri-shield-check-line"></i></div>
+      <h3>Nenhum log encontrado</h3>
+      <p>
+        {{
+          temFiltrosAtivos
+            ? 'Nenhuma movimentação corresponde aos filtros selecionados. Tente ampliar o período ou limpar os filtros.'
+            : 'As alterações feitas em Trabalhos, Financeiro, Faturas, Logística, Estoque e Usuários aparecerão aqui automaticamente.'
+        }}
+      </p>
+      <button type="button" class="btn-secondary" *ngIf="temFiltrosAtivos" (click)="limparFiltros()">
+        Limpar filtros
+      </button>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination-bar" *ngIf="total > 0">
+      <span class="pagination-info">
+        Página <strong>{{ page }}</strong> de <strong>{{ totalPages }}</strong>
+      </span>
+      <div class="pagination-controls">
+        <button
+          type="button"
+          class="page-btn"
+          [disabled]="page <= 1"
+          (click)="mudarPagina(1)"
+          title="Primeira página"
+        >
+          <i class="ri-skip-back-mini-line"></i>
+        </button>
+        <button
+          type="button"
+          class="page-btn"
+          [disabled]="page <= 1"
+          (click)="mudarPagina(page - 1)"
+        >
+          <i class="ri-arrow-left-s-line"></i> Anterior
+        </button>
+        <button
+          type="button"
+          class="page-btn"
+          [disabled]="page >= totalPages"
+          (click)="mudarPagina(page + 1)"
+        >
+          Próxima <i class="ri-arrow-right-s-line"></i>
+        </button>
+        <button
+          type="button"
+          class="page-btn"
+          [disabled]="page >= totalPages"
+          (click)="mudarPagina(totalPages)"
+          title="Última página"
+        >
+          <i class="ri-skip-forward-mini-line"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>

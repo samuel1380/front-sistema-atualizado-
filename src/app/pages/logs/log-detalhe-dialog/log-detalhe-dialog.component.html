@@ -1,0 +1,117 @@
+<div class="log-dialog-shell">
+  <div class="log-dialog-header">
+    <div class="header-left">
+      <div class="header-badges">
+        <span class="acao-pill" [ngClass]="getAcaoBadgeClass(log.acao)">
+          {{ getAcaoLabel(log.acao) }}
+        </span>
+        <span class="modulo-pill">{{ log.modulo }}</span>
+        <span class="registro-pill" *ngIf="log.idRegistro">#{{ log.idRegistro }}</span>
+      </div>
+      <h2>{{ log.resumo }}</h2>
+      <p class="subline">
+        Log #{{ log.idLog }} · Entidade <strong>{{ log.entidade }}</strong>
+        · {{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}
+      </p>
+    </div>
+    <button type="button" class="close-btn" (click)="fechar()" aria-label="Fechar detalhes">
+      <i class="ri-close-line"></i>
+    </button>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-card">
+      <span class="meta-label">Usuário responsável</span>
+      <span class="meta-value">{{ log.nomeUsuario || 'Sistema (Automático)' }}</span>
+      <span class="meta-sub" *ngIf="log.emailUsuario">{{ log.emailUsuario }}</span>
+    </div>
+    <div class="meta-card">
+      <span class="meta-label">Data e Hora</span>
+      <span class="meta-value mono">{{ log.dataHora | date:'dd/MM/yyyy HH:mm:ss' }}</span>
+      <span class="meta-sub">Horário do servidor</span>
+    </div>
+    <div class="meta-card">
+      <span class="meta-label">Origem / Requisição</span>
+      <span class="meta-value mono">{{ log.metodoHttp || 'INTERNO' }} {{ log.rota || '-' }}</span>
+      <span class="meta-sub">IP: {{ log.ip || 'Local / Interno' }} · HTTP {{ log.statusHttp || '-' }}</span>
+    </div>
+  </div>
+
+  <div class="tabs-bar">
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="abaAtiva === 'diff'"
+      (click)="abaAtiva = 'diff'"
+    >
+      <i class="ri-git-commit-line"></i>
+      Comparação de Campos ({{ log.camposAlterados.length || 0 }})
+    </button>
+    <button
+      type="button"
+      class="tab-btn"
+      [class.active]="abaAtiva === 'json'"
+      (click)="abaAtiva = 'json'"
+    >
+      <i class="ri-code-s-slash-line"></i>
+      Dados Técnicos (Antes / Depois)
+    </button>
+  </div>
+
+  <div class="log-dialog-body">
+    <ng-container *ngIf="abaAtiva === 'diff'">
+      <div class="empty-diff" *ngIf="!log.camposAlterados || log.camposAlterados.length === 0">
+        <i class="ri-information-line"></i>
+        <p>Nenhum diff campo a campo disponível para este evento. Consulte a aba <strong>Dados Técnicos</strong>.</p>
+      </div>
+
+      <div class="diff-table-wrap" *ngIf="log.camposAlterados && log.camposAlterados.length > 0">
+        <table class="diff-table">
+          <thead>
+            <tr>
+              <th>Campo</th>
+              <th>Valor Anterior</th>
+              <th>Novo Valor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of log.camposAlterados">
+              <td class="campo-col">
+                <div class="campo-label">{{ item.label }}</div>
+                <div class="campo-key">{{ item.campo }}</div>
+              </td>
+              <td class="antes-col">
+                <span class="diff-chip before">{{ formatarValor(item.antes) }}</span>
+              </td>
+              <td class="depois-col">
+                <span class="diff-chip after">{{ formatarValor(item.depois) }}</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="abaAtiva === 'json'">
+      <div class="json-grid">
+        <div class="json-pane">
+          <div class="json-title before">
+            <i class="ri-history-line"></i> Estado Anterior
+          </div>
+          <pre class="json-box">{{ formatarJson(log.dadosAnteriores) }}</pre>
+        </div>
+        <div class="json-pane">
+          <div class="json-title after">
+            <i class="ri-checkbox-circle-line"></i> Novo Estado / Payload
+          </div>
+          <pre class="json-box">{{ formatarJson(log.dadosNovos) }}</pre>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="log-dialog-footer">
+    <span class="req-id" *ngIf="log.idRequisicao">Correlação: {{ log.idRequisicao }}</span>
+    <button type="button" class="btn-done" (click)="fechar()">Fechar</button>
+  </div>
+</div>
