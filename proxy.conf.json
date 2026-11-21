@@ -1,0 +1,38 @@
+[
+  {
+    "context": [
+      "/auth",
+      "/login",
+      "/usuario",
+      "/empresa",
+      "/trabalho",
+      "/dentista",
+      "/pedido",
+      "/produto",
+      "/produtos-empresa",
+      "/cor",
+      "/cor-empresa",
+      "/marca-componente",
+      "/componente",
+      "/componente-empresa",
+      "/estoque",
+      "/transferencia",
+      "/almoxarifado",
+      "/financeiro",
+      "/motivo",
+      "/localidade",
+      "/cadastro-complementar-empresa",
+      "/tabela-preco-produto",
+      "/empresa-tabela-preco",
+      "/historico-status-trabalho",
+      "/paciente",
+      "/ordem-servico",
+      "/foto-paciente",
+      "/arquivo-trabalho",
+      "/logs"
+    ],
+    "target": "http://localhost:3002",
+    "secure": false,
+    "changeOrigin": true
+  }
+]

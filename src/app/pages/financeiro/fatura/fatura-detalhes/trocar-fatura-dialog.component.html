@@ -1,0 +1,80 @@
+<h2 mat-dialog-title class="d-flex align-items-center">
+  <mat-icon color="accent" style="margin-right: 8px;">swap_horiz</mat-icon>
+  <span>Mover Ordem de Serviço / Trabalho</span>
+</h2>
+
+<mat-dialog-content class="pt-2">
+  <p class="mb-3">
+    Escolha para onde deseja transferir este trabalho da Fatura #{{ data.idFaturaAtual }}:
+  </p>
+
+  <mat-radio-group [(ngModel)]="tipoDestino" class="d-flex flex-column gap-2 mb-3">
+    <mat-radio-button value="MES" color="primary">
+      <strong>Mover para um Mês Específico</strong>
+      <span class="d-block text-muted small">Cria ou vincula a uma fatura do mês escolhido</span>
+    </mat-radio-button>
+
+    <div *ngIf="tipoDestino === 'MES'" class="ps-4 pt-2 pb-2">
+      <div class="row g-2">
+        <div class="col-7">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Mês de Destino</mat-label>
+            <mat-select [(ngModel)]="mesSelecionado">
+              <mat-option *ngFor="let m of meses" [value]="m.valor">
+                {{ m.nome }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <div class="col-5">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Ano</mat-label>
+            <mat-select [(ngModel)]="anoSelecionado">
+              <mat-option *ngFor="let a of anos" [value]="a">
+                {{ a }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+    </div>
+
+    <mat-radio-button value="FATURA" color="primary" [disabled]="faturasDisponiveis.length === 0">
+      <strong>Selecionar Fatura Aberta Existente</strong>
+      <span class="d-block text-muted small" *ngIf="faturasDisponiveis.length > 0">
+        {{ faturasDisponiveis.length }} fatura(s) aberta(s) encontrada(s)
+      </span>
+      <span class="d-block text-muted small" *ngIf="faturasDisponiveis.length === 0 && !carregandoFaturas">
+        (Nenhuma outra fatura aberta encontrada para esta clínica)
+      </span>
+    </mat-radio-button>
+
+    <div *ngIf="tipoDestino === 'FATURA' && faturasDisponiveis.length > 0" class="ps-4 pt-2 pb-2">
+      <mat-form-field appearance="outline" class="w-100">
+        <mat-label>Fatura de Destino</mat-label>
+        <mat-select [(ngModel)]="idFaturaSelecionada">
+          <mat-option *ngFor="let f of faturasDisponiveis" [value]="f.idFatura">
+            Fatura #{{ f.idFatura }} - {{ f.dataInicio | date:'MM/yyyy' }} (Total: {{ f.valorTotal | currency:'BRL' }})
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <mat-radio-button value="AUTOMATICO" color="primary">
+      <strong>Próxima Vigência Automática</strong>
+      <span class="d-block text-muted small">Move automaticamente para a vigência do próximo mês</span>
+    </mat-radio-button>
+  </mat-radio-group>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()">Cancelar</button>
+  <button 
+    mat-raised-button 
+    color="primary" 
+    (click)="onConfirm()"
+    [disabled]="tipoDestino === 'FATURA' && !idFaturaSelecionada"
+    cdkFocusInitial>
+    Confirmar Mudança
+  </button>
+</mat-dialog-actions>
