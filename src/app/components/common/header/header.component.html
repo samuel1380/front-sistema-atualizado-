@@ -23,14 +23,70 @@
                     <input
                         type="text"
                         class="input-search"
-                        placeholder="Pesquisar trabalho por ID"
+                        placeholder="Buscar por ID, paciente, clínica, doutor..."
                         [(ngModel)]="pesquisaTrabalhoId"
-                        (keyup.enter)="buscarTrabalhoPorId()"
-                        (keypress)="apenasNumeros($event)"
+                        (input)="onPesquisaInput()"
+                        (focus)="onPesquisaFocus()"
+                        (keyup.enter)="executarPesquisaEnter()"
+                        autocomplete="off"
                     >
-                    <button type="button" (click)="buscarTrabalhoPorId()">
-                        <i class="flaticon-search"></i>
+                    <button type="button" (click)="executarPesquisaEnter()" [disabled]="buscando">
+                        <i *ngIf="!buscando" class="flaticon-search"></i>
+                        <span *ngIf="buscando" class="spinner-border spinner-border-sm text-primary" role="status" style="width: 14px; height: 14px; border-width: 2px;"></span>
                     </button>
+
+                    <!-- Dropdown flutuante de resultados da busca -->
+                    <div class="search-results-dropdown" *ngIf="mostrarResultados">
+                        <div class="dropdown-header d-flex justify-content-between align-items-center">
+                            <span class="header-count">
+                                Resultados encontrados ({{ resultadosPesquisa.length }})
+                            </span>
+                            <span *ngIf="buscando" class="spinner-border spinner-border-sm text-primary" role="status" style="width: 12px; height: 12px; border-width: 2px;"></span>
+                        </div>
+
+                        <div class="dropdown-body custom-scrollbar">
+                            <div
+                                *ngFor="let t of resultadosPesquisa"
+                                class="search-result-row d-flex align-items-center justify-content-between"
+                                (click)="selecionarTrabalho(t)"
+                            >
+                                <div class="result-main-info d-flex align-items-center">
+                                    <span class="id-badge">#{{ t.idTrabalho }}</span>
+                                    <div class="result-texts">
+                                        <div class="patient-name">
+                                            {{ t.paciente?.nome || t.nomePaciente || 'Paciente não informado' }}
+                                        </div>
+                                        <div class="details-line">
+                                            <span *ngIf="t.empresa?.nome || t.nomeEmpresa" class="detail-empresa">
+                                                {{ t.empresa?.nome || t.nomeEmpresa }}
+                                            </span>
+                                            <span *ngIf="(t.empresa?.nome || t.nomeEmpresa) && t.dentista?.nome" class="detail-sep">•</span>
+                                            <span *ngIf="t.dentista?.nome" class="detail-dentista">
+                                                {{ formatarDentista(t.dentista?.nome) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="result-side d-flex align-items-center">
+                                    <span class="status-pill" [ngClass]="t.status?.toLowerCase()">
+                                        {{ formatarStatus(t.status) }}
+                                    </span>
+                                    <mat-icon class="chevron-icon">chevron_right</mat-icon>
+                                </div>
+                            </div>
+
+                            <div *ngIf="resultadosPesquisa.length === 0 && !buscando" class="no-results-box text-center py-4 text-muted">
+                                <mat-icon class="no-results-icon mb-1">search_off</mat-icon>
+                                <p class="mb-0 small">Nenhum trabalho encontrado para "<strong>{{ pesquisaTrabalhoId }}</strong>"</p>
+                            </div>
+                        </div>
+
+                        <div *ngIf="resultadosPesquisa.length > 0" class="dropdown-footer d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">Pressione <kbd>Enter</kbd> para abrir o primeiro</span>
+                            <span class="small text-primary fw-medium">Abrir trabalho &rarr;</span>
+                        </div>
+                    </div>
                 </div>
             </li>
             <li class="d-none d-lg-block">
@@ -38,7 +94,7 @@
                     <i class="flaticon-calendar"></i> {{ formattedDate }}
                 </div>
             </li>
-            <li>
+            <li class="d-flex align-items-center">
                 <button
                     type="button"
                     class="dark-mode-toggle-btn border-none bg-transparent position-relative d-flex align-items-center justify-content-center"
@@ -49,11 +105,11 @@
                     <i [class]="themeService.isDark() ? 'ri-sun-line theme-icon sun' : 'ri-moon-line theme-icon moon'"></i>
                 </button>
             </li>
-            <li>
-                <button mat-icon-button [matMenuTriggerFor]="profileMenu" class="profile-btn main-color border-none bg-transparent position-relative">
+            <li class="d-flex align-items-center">
+                <button [matMenuTriggerFor]="profileMenu" class="profile-btn main-color border-none bg-transparent position-relative" [attr.aria-label]="'Menu de usuário'">
                     <img src="assets/img/admin.jpg" class="rounded-circle" alt="admin">
-                    {{currentUser?.tipoUsuario}}
-                    <span class="fw-semibold">{{currentUser?.nome}}</span>
+                    <span class="badge bg-light text-primary text-uppercase me-1 fw-semibold d-none d-md-inline-block" style="font-size: 11px;">{{currentUser?.tipoUsuario}}</span>
+                    <span class="fw-semibold d-none d-md-inline ms-1">{{currentUser?.nome}}</span>
                 </button>
                 <mat-menu class="profile-menu-dropdown" #profileMenu="matMenu" xPosition="before">
                     <ul class="m-0">

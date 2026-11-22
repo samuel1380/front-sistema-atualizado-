@@ -15,26 +15,31 @@ export class ComponentesEditComponent {
   componente: any = null;
 
   constructor(private router: Router, private activatedRoute: ActivatedRoute, private dialog: MatDialog) {
-
-    const idMarca = this.activatedRoute.snapshot.paramMap.get("id")
-    this.idComponente = idMarca && parseInt(idMarca) || 0;
+    const idParam = this.activatedRoute.snapshot.paramMap.get("id");
+    this.idComponente = idParam ? parseInt(idParam, 10) : 0;
     if (!this.idComponente) {
+      this.router.navigate(['/l/componente']);
       return;
     }
 
-    buscarComponentePorId(this.idComponente).then((response: any) => {
-      if (response.status === 200) {
-        this.componente = response.data;
-      }
-    });
-
+    this.carregarComponente();
   }
 
-  async onSave(marcaPayload: any) {
-    try {
-      const result = await alterarComponente(marcaPayload, this.idComponente);
+  private carregarComponente() {
+    buscarComponentePorId(this.idComponente).then((response: any) => {
+      if (response && (response.status === 200 || response.status === 201)) {
+        this.componente = response.data;
+      }
+    }).catch(err => {
+      console.error('Erro ao buscar componente por ID:', err);
+    });
+  }
 
-      if (result.status == 200) {
+  async onSave(componentePayload: any) {
+    try {
+      const result = await alterarComponente(componentePayload, this.idComponente);
+
+      if (result && (result.status === 200 || result.status === 201)) {
         this.dialog.open(DialogCadastroSucessoComponent, {
           width: '50%',
           enterAnimationDuration: `100ms`,
@@ -45,6 +50,7 @@ export class ComponentesEditComponent {
       }
     }
     catch (e) {
+      console.error('Erro ao alterar componente:', e);
       this.dialog.open(DialogCadastroErroComponent, {
         width: '50%',
         enterAnimationDuration: `100ms`,

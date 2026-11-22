@@ -50,6 +50,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { DialogCadastroSucessoComponent } from './components/dialog-cadastro-sucesso/dialog-cadastro-sucesso.component';
 import { DialogCadastroErroComponent } from './components/dialog-cadastro-erro/dialog-cadastro-erro.component';
+import { DialogCategoriaProdutoCadastroComponent } from './components/dialog-categoria-produto-cadastro/dialog-categoria-produto-cadastro.component';
 import { ProdutoEditComponent } from './pages/produto-edit/produto-edit.component';
 import { CustomizerSettingsComponent } from './pages/externalComponents/customizer-settings/customizer-settings.component';
 import { OdontogramComponent } from './odontogram/odontogram.component';
@@ -211,6 +212,7 @@ registerLocaleData(ptBr);
     CadastroComplementarEmpresaComponent,
     DialogCadastroSucessoComponent,
     DialogCadastroErroComponent,
+    DialogCategoriaProdutoCadastroComponent,
     ProdutoEditComponent,
     OdontogramComponent,
     RegisterComponent,

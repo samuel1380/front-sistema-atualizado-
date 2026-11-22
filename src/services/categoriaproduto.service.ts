@@ -21,3 +21,19 @@ export const buscarCategorias = async () => {
 
   return await Axios(options);
 };
+
+export const cadastrarCategoria = async (data: { nome: string; ativo?: boolean }) => {
+  const options = {
+    method: "POST",
+    url: `${env.BASE_URL}/categoriaproduto`,
+    data: {
+      nome: (data.nome || '').trim(),
+      ativo: data.ativo === false ? false : true,
+    },
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`,
+    }
+  };
+
+  return await Axios(options);
+};

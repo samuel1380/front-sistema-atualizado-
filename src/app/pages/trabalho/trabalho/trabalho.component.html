@@ -1,24 +1,67 @@
 <div class="listaTrabalhos">
-  <mat-card class="mb-25 tagus-card filaEspera">
-    <!-- <mat-card-header>
-      <a mat-flat-button class="default-btn tagus" (click)="criarTrabalho()">
-          <i class="ri-add-fill"></i> Add Trabalho
-      </a>
-    </mat-card-header> -->
 
-    <mat-card-content>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['PENDENTE']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['ENVIADO_PROVA']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['MODELAGEM']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['IMPRESSAO_PROVA']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['IMPRESSAO_CARGA_CERAMICA']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['IMPRESSAO_BIOSPLINT_PLACA']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['FRESAGEM']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['SINTERIZACAO']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['MAQUIAGEM']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['AGUARDANDO_COMPONENTE']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['PACOTE']"></app-trabalho-lista-trabalho>
-      <app-trabalho-lista-trabalho [statusTrabalho]="['AGUARDANDO_COLETA']"></app-trabalho-lista-trabalho>
+  <!-- Barra de Filtro Rápido de Status (Scroll Horizontal Touch no Mobile) -->
+  <div class="status-filter-wrapper">
+    <div class="status-filter-chips">
+      <!-- Opção: Apenas com Trabalhos -->
+      <button 
+        type="button" 
+        class="chip-filter-btn"
+        [class.active]="selectedStatus === 'COM_TRABALHO'"
+        (click)="selecionarStatus('COM_TRABALHO')">
+        <mat-icon class="chip-icon">filter_list</mat-icon>
+        <span>Com Trabalhos</span>
+        <span class="chip-badge" *ngIf="totalGeral > 0">{{ totalGeral }}</span>
+      </button>
+
+      <!-- Opção: Todos os Status -->
+      <button 
+        type="button" 
+        class="chip-filter-btn"
+        [class.active]="selectedStatus === 'TODOS'"
+        (click)="selecionarStatus('TODOS')">
+        <span>Todos</span>
+        <span class="chip-badge">{{ totalGeral }}</span>
+      </button>
+
+      <!-- Chips individuais para cada Status -->
+      <button 
+        type="button" 
+        class="chip-filter-btn"
+        *ngFor="let s of statuses"
+        [class.active]="selectedStatus === s.key"
+        [class.has-items]="(statusCounts[s.key] || 0) > 0"
+        (click)="selecionarStatus(s.key)">
+        <span>{{ s.label }}</span>
+        <span class="chip-badge" [class.badge-zero]="!(statusCounts[s.key] > 0)">
+          {{ statusCounts[s.key] !== undefined ? statusCounts[s.key] : '-' }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Estado vazio quando não houver nenhum trabalho em andamento -->
+  <mat-card class="mb-25 tagus-card empty-dashboard-card" *ngIf="selectedStatus === 'COM_TRABALHO' && totalGeral === 0 && totalStatusComTrabalhos === 0">
+    <mat-card-content class="text-center py-4">
+      <mat-icon class="empty-dashboard-icon">done_all</mat-icon>
+      <h5 class="mt-2 mb-1">Nenhum trabalho pendente no momento</h5>
+      <p class="text-muted mb-0">Todas as filas de produção estão em dia. Toque em "Todos" para visualizar todos os status.</p>
     </mat-card-content>
   </mat-card>
+
+  <!-- Lista de Trabalhos por Status -->
+  <mat-card class="mb-25 tagus-card filaEspera" *ngIf="!(selectedStatus === 'COM_TRABALHO' && totalGeral === 0 && totalStatusComTrabalhos === 0)">
+    <mat-card-content>
+      <div 
+        *ngFor="let s of statuses"
+        class="status-group-item"
+        [style.display]="deveExibirStatus(s.key) ? 'block' : 'none'">
+        <app-trabalho-lista-trabalho 
+          [statusTrabalho]="[s.key]"
+          (totalTrabalhos)="onTotalTrabalhos(s.key, $event)">
+        </app-trabalho-lista-trabalho>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
 </div>

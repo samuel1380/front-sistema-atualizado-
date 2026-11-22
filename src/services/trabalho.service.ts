@@ -74,7 +74,7 @@ export const enviaTrabalhoProducao = async (idTrabalho: number) => {
   return await Axios(options);
 };
 
-export const buscarTrabalhosConcluidos = async (idEmpresa?: string, dataInicio?: Date, dataFim?: Date) => {
+export const buscarTrabalhosConcluidos = async (idEmpresa?: string, dataInicio?: Date, dataFim?: Date, incluirOcultos = false) => {
   const idEmpresaSend = idEmpresa;
 
   const options = {
@@ -82,11 +82,27 @@ export const buscarTrabalhosConcluidos = async (idEmpresa?: string, dataInicio?:
     url: `${env.BASE_URL}/trabalhoconcluidos`,
     params: {
       dataInicio,
-      dataFim
+      dataFim,
+      incluirOcultos
     },
     headers: {
       Authorization: `Bearer ${getAuthToken()}`,
       idEmpresa: idEmpresaSend
+    }
+  };
+
+  return await Axios(options);
+};
+
+export const ocultarTrabalhoConcluido = async (idTrabalho: number, ocultar = true) => {
+  const options = {
+    method: "PUT",
+    url: `${env.BASE_URL}/trabalho/${idTrabalho}/ocultar-concluido`,
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
+    },
+    data: {
+      ocultar
     }
   };
 
@@ -154,7 +170,7 @@ export const trocaOrdemFila = async (trabalhos: any) => {
   return await Axios(options);
 };
 
-export const buscarTrabalhos = async (statusTrabalho: string[]) => {
+export const buscarTrabalhos = async (statusTrabalho: string[], incluirOcultos: boolean = false) => {
   const options = {
     method: "GET",
     url: `${env.BASE_URL}/trabalho`,
@@ -162,7 +178,8 @@ export const buscarTrabalhos = async (statusTrabalho: string[]) => {
       Authorization: `Bearer ${getAuthToken()}`
     },
     params: {
-      statusTrabalho
+      statusTrabalho,
+      incluirOcultos
     },
   };
 
@@ -246,6 +263,21 @@ export const buscaCategoriasProdutosEmpresa = async (idEmpresa: string) => {
     headers: {
       Authorization: `Bearer ${currentUser.token}`, // This one is correct because of the guard clause above
       "Content-Type": "multipart/form-data"
+    }
+  };
+
+  return await Axios(options);
+};
+
+export const pesquisarTrabalhos = async (termo: string) => {
+  const options = {
+    method: "GET",
+    url: `${env.BASE_URL}/trabalho-pesquisa`,
+    params: {
+      termo
+    },
+    headers: {
+      Authorization: `Bearer ${getAuthToken()}`
     }
   };
 

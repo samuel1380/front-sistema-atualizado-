@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router } from '@angular/router';
@@ -21,28 +21,54 @@ export class MyErrorStateMatcher implements ErrorStateMatcher {
   templateUrl: './componentes-cadastro.component.html',
   styleUrls: ['./componentes-cadastro.component.sass']
 })
-export class ComponentesCadastroComponent {
+export class ComponentesCadastroComponent implements OnInit, OnChanges {
   marcaList: any = [];
   @Input() componente: any;
   @Output() onSave = new EventEmitter<any>();
 
   matcher = new MyErrorStateMatcher();
 
+  marcaComponenteFormControl = new FormControl<number | ''>('', [Validators.required]);
+  nomeFormControl = new FormControl('', [Validators.required]);
+  precoControl = new FormControl('', [Validators.required]);
+  hasParafusoFormControl = new FormControl(false, [Validators.required]);
+
   constructor(private router: Router, private dialog: MatDialog, public themeService: CustomizerSettingsService) {
-    buscarMarcas().then((response: any) => {
-      if (response.status === 200) {
-        this.marcaList = response.data;
-      }
-    });
+    this.carregarMarcas();
   }
 
   ngOnInit() {
-    if(this.componente) {
-      this.nomeFormControl.setValue(this.componente.nome);
-      this.marcaComponenteFormControl.setValue(this.componente.idMarcaComponente);
-      this.precoControl.setValue(this.componente.preco);
-      this.hasParafusoFormControl.setValue(this.componente.hasParafuso);
+    this.preencherFormulario();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['componente'] && this.componente) {
+      this.preencherFormulario();
     }
+  }
+
+  private carregarMarcas() {
+    buscarMarcas().then((response: any) => {
+      if (response && response.status === 200 && Array.isArray(response.data)) {
+        this.marcaList = response.data;
+        // Se o componente já estava carregado, garante que o select reflita a marca
+        if (this.componente?.idMarcaComponente) {
+          this.marcaComponenteFormControl.setValue(Number(this.componente.idMarcaComponente));
+        }
+      }
+    }).catch(err => {
+      console.error('Erro ao carregar marcas:', err);
+    });
+  }
+
+  private preencherFormulario() {
+    if (!this.componente) return;
+    this.nomeFormControl.setValue(this.componente.nome || '');
+    if (this.componente.idMarcaComponente) {
+      this.marcaComponenteFormControl.setValue(Number(this.componente.idMarcaComponente));
+    }
+    this.precoControl.setValue(this.componente.preco !== undefined ? String(this.componente.preco) : '');
+    this.hasParafusoFormControl.setValue(!!this.componente.hasParafuso);
   }
 
   toggleTheme() {
@@ -61,10 +87,13 @@ export class ComponentesCadastroComponent {
       this.themeService.toggleRTLEnabledTheme();
   }
 
-  marcaComponenteFormControl = new FormControl('', [Validators.required]);
-  nomeFormControl = new FormControl('', [Validators.required]);
-  precoControl = new FormControl('', [Validators.required]);
-  hasParafusoFormControl = new FormControl(false, [Validators.required]);
+  private parsePreco(valor: any): number {
+    if (typeof valor === 'number') return Math.round(valor * 100) / 100;
+    if (!valor) return 0;
+    const str = valor.toString().replace(/[^\d.,]/g, '').replace(',', '.');
+    const parsed = parseFloat(str);
+    return isNaN(parsed) ? 0 : Math.round(parsed * 100) / 100;
+  }
 
   async onSubmitButton(event: Event) {
     event.preventDefault();
@@ -74,34 +103,31 @@ export class ComponentesCadastroComponent {
       return;
     }
 
-    const preco = this.precoControl.value || '0';
-    let cadastroComponentePayload = {
-      idMarcaComponente: this.marcaComponenteFormControl.value,
-      nome: this.nomeFormControl.value,
-      preco: parseFloat(preco),
-      hasParafuso: this.hasParafusoFormControl.value
+    const precoNumero = this.parsePreco(this.precoControl.value);
+    const idMarcaNumero = Number(this.marcaComponenteFormControl.value);
+
+    const cadastroComponentePayload = {
+      idMarcaComponente: idMarcaNumero,
+      nome: (this.nomeFormControl.value || '').trim(),
+      preco: precoNumero,
+      hasParafuso: !!this.hasParafusoFormControl.value
     };
 
     try {
-      let result;
-      if(!this.componente) {
-        result = await cadastrarComponente(cadastroComponentePayload);
+      if (!this.componente) {
+        const result = await cadastrarComponente(cadastroComponentePayload);
+        if (result?.status === 201 || result?.status === 200) {
+          this.dialog.open(DialogCadastroComponent, {
+            width: '50%',
+            enterAnimationDuration: `100ms`,
+            exitAnimationDuration: `100ms`,
+          });
+          this.router.navigate(['/l/componente']);
+        }
       } else {
         this.onSave.emit(cadastroComponentePayload);
       }
-
-      if (result?.status == 201) {
-        this.dialog.open(DialogCadastroComponent, {
-          width: '50%',
-          enterAnimationDuration: `100ms`,
-          exitAnimationDuration: `100ms`,
-        });
-        this.router.navigate(['/l/componente']);
-        return;
-      }
-
-    }
-    catch (e) {
+    } catch (e) {
       this.dialog.open(ErroTenteMaisTardeComponent, {
         width: '50%',
         enterAnimationDuration: `100ms`,
@@ -111,14 +137,31 @@ export class ComponentesCadastroComponent {
   }
 
   private validaCadastro(): boolean {
-    const nomeComponente = this.nomeFormControl.value;
+    const nomeComponente = (this.nomeFormControl.value || '').trim();
+    const idMarca = Number(this.marcaComponenteFormControl.value);
+    const precoVal = this.precoControl.value;
 
-    if(!nomeComponente) {
-      this.marcaComponenteFormControl.markAllAsTouched();
-      this.nomeFormControl.markAllAsTouched();
-      return true;
+    let hasError = false;
+
+    if (!nomeComponente) {
+      this.nomeFormControl.markAsTouched();
+      this.nomeFormControl.setErrors({ required: true });
+      hasError = true;
     }
-    return false;
+
+    if (!idMarca || isNaN(idMarca) || idMarca <= 0) {
+      this.marcaComponenteFormControl.markAsTouched();
+      this.marcaComponenteFormControl.setErrors({ required: true });
+      hasError = true;
+    }
+
+    if (precoVal === null || precoVal === undefined || precoVal === '' || isNaN(this.parsePreco(precoVal))) {
+      this.precoControl.markAsTouched();
+      this.precoControl.setErrors({ required: true });
+      hasError = true;
+    }
+
+    return hasError;
   }
 }
 

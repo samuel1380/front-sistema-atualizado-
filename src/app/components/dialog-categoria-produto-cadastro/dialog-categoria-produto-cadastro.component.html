@@ -1,0 +1,27 @@
+<h2 mat-dialog-title class="fw-bold d-flex align-items-center gap-2">
+  <mat-icon color="primary">category</mat-icon>
+  Nova Categoria de Produto
+</h2>
+
+<mat-dialog-content>
+  <p class="text-muted small mb-3">
+    Digite o nome da categoria que deseja adicionar ao catálogo de produtos.
+  </p>
+  <mat-form-field appearance="outline" class="w-100">
+    <mat-label>Nome da Categoria *</mat-label>
+    <input matInput [(ngModel)]="nomeCategoria" (ngModelChange)="erroMensagem = ''" (keydown.enter)="$event.preventDefault(); salvar()" placeholder="Ex: RESINA 3D, PMMA, ZIRCÔNIA" required autofocus>
+    <mat-error *ngIf="!nomeCategoria || !nomeCategoria.trim()">
+      Nome da categoria é <strong>obrigatório</strong>.
+    </mat-error>
+  </mat-form-field>
+  <div *ngIf="erroMensagem" class="alert alert-danger p-2 small mt-2">
+    {{ erroMensagem }}
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end" class="gap-2">
+  <button mat-button (click)="cancelar()" [disabled]="salvando">Cancelar</button>
+  <button mat-raised-button color="primary" (click)="salvar()" [disabled]="!nomeCategoria.trim() || salvando">
+    {{ salvando ? 'Salvando...' : 'Salvar Categoria' }}
+  </button>
+</mat-dialog-actions>

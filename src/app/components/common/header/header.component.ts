@@ -6,7 +6,7 @@ import { AuthUserService } from 'src/app/serviceStorage/authUser.service';
 import { Router } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatDialog } from '@angular/material/dialog';
-import { buscarTrabalho } from 'src/services/trabalho.service';
+import { buscarTrabalho, pesquisarTrabalhos } from 'src/services/trabalho.service';
 import { ChangePasswordDialogComponent } from '../../change-password-dialog/change-password-dialog.component';
 
 @Component({
@@ -30,7 +30,10 @@ export class HeaderComponent {
     isToggled = false;
     currentUser: any = {};
     pesquisaTrabalhoId: string = '';
+    resultadosPesquisa: any[] = [];
+    mostrarResultados: boolean = false;
     buscando: boolean = false;
+    private debounceTimer: any = null;
 
     constructor(
         private toggleService: ToggleService,
@@ -96,94 +99,147 @@ export class HeaderComponent {
     currentDate: Date = new Date();
     formattedDate: any = this.datePipe.transform(this.currentDate, 'dd MMMM yyyy');
 
-    apenasNumeros(event: KeyboardEvent): boolean {
-        const charCode = event.which ? event.which : event.keyCode;
-        // Permite apenas números (0-9) e teclas de controle (backspace, delete, tab, etc)
-        if (charCode > 31 && (charCode < 48 || charCode > 57)) {
-            event.preventDefault();
-            return false;
+    @HostListener('document:click', ['$event'])
+    onClickOutside(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.search-box')) {
+            this.mostrarResultados = false;
         }
-        return true;
     }
 
-    async buscarTrabalhoPorId(): Promise<void> {
-        const idTrabalhoStr = this.pesquisaTrabalhoId?.trim();
-
-        if (!idTrabalhoStr) {
-            return;
+    onPesquisaInput() {
+        if (this.debounceTimer) {
+            clearTimeout(this.debounceTimer);
         }
 
-        // Valida que é um número válido
-        const idTrabalho = parseInt(idTrabalhoStr, 10);
-        if (isNaN(idTrabalho) || idTrabalho <= 0) {
-            this.snackBar.open('Por favor, informe um ID de trabalho válido.', 'Fechar', {
-                duration: 3000,
-                horizontalPosition: 'right',
-                verticalPosition: 'top'
-            });
-            return;
-        }
-
-        if (this.buscando) {
+        const termo = this.pesquisaTrabalhoId ? this.pesquisaTrabalhoId.trim() : '';
+        if (termo.length < 2) {
+            this.resultadosPesquisa = [];
+            this.mostrarResultados = false;
             return;
         }
 
         this.buscando = true;
-
-        try {
-            const response = await buscarTrabalho(idTrabalho);
-
-            if (response.data) {
-                // Tenta obter idPaciente diretamente ou através da relação paciente
-                const idPaciente = response.data.idPaciente || response.data.paciente?.idPaciente;
-
-                if (idPaciente) {
-                    const targetUrl = `/l/paciente/edit/${idPaciente}`;
-                    const currentUrl = this.router.url;
-
-                    // Se já está na mesma rota, força recarga usando navigateByUrl com replaceUrl
-                    if (currentUrl === targetUrl) {
-                        // Força recarga navegando para a mesma URL novamente
-                        this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
-                            this.router.navigate([targetUrl]);
-                        });
-                    } else {
-                        // Navega normalmente se for uma rota diferente
-                        this.router.navigate([targetUrl]);
-                    }
-                    this.pesquisaTrabalhoId = ''; // Limpa o campo
+        this.debounceTimer = setTimeout(async () => {
+            try {
+                const res = await pesquisarTrabalhos(termo);
+                if (res && res.data) {
+                    this.resultadosPesquisa = Array.isArray(res.data) ? res.data : [];
                 } else {
-                    this.snackBar.open('Trabalho encontrado, mas sem paciente associado.', 'Fechar', {
-                        duration: 3000,
-                        horizontalPosition: 'right',
-                        verticalPosition: 'top'
-                    });
+                    this.resultadosPesquisa = [];
                 }
-            } else {
-                this.snackBar.open('Trabalho não encontrado.', 'Fechar', {
-                    duration: 3000,
-                    horizontalPosition: 'right',
-                    verticalPosition: 'top'
-                });
+                this.mostrarResultados = true;
+            } catch (err) {
+                console.error('Erro ao pesquisar trabalhos:', err);
+                this.resultadosPesquisa = [];
+            } finally {
+                this.buscando = false;
             }
-        } catch (error: any) {
-            console.error('Erro ao buscar trabalho:', error);
-            if (error.response?.status === 404) {
-                this.snackBar.open('Trabalho não encontrado.', 'Fechar', {
-                    duration: 3000,
-                    horizontalPosition: 'right',
-                    verticalPosition: 'top'
-                });
-            } else {
-                this.snackBar.open('Erro ao buscar trabalho. Tente novamente.', 'Fechar', {
-                    duration: 3000,
-                    horizontalPosition: 'right',
-                    verticalPosition: 'top'
-                });
+        }, 300);
+    }
+
+    onPesquisaFocus() {
+        if (this.pesquisaTrabalhoId && this.pesquisaTrabalhoId.trim().length >= 2) {
+            this.mostrarResultados = true;
+            if (this.resultadosPesquisa.length === 0 && !this.buscando) {
+                this.onPesquisaInput();
             }
-        } finally {
-            this.buscando = false;
         }
+    }
+
+    formatarStatus(status: string): string {
+        if (!status) return '';
+        return status
+            .toLowerCase()
+            .split('_')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+    }
+
+    formatarDentista(nome: string): string {
+        if (!nome) return '';
+        const n = nome.trim();
+        if (/^dr\.?|^dra\.?/i.test(n)) {
+            return n;
+        }
+        return `Dr(a). ${n}`;
+    }
+
+    async executarPesquisaEnter(): Promise<void> {
+        const termo = this.pesquisaTrabalhoId ? this.pesquisaTrabalhoId.trim() : '';
+        if (!termo) return;
+
+        // Se for um número exato de ID (ou começar com #), verifica se tem correspondência exata
+        const numApenas = termo.replace(/[^0-9]/g, '');
+        if (numApenas && (termo.startsWith('#') || /^\d+$/.test(termo))) {
+            const idNumero = parseInt(numApenas, 10);
+            const exactMatch = this.resultadosPesquisa.find(t => t.idTrabalho === idNumero);
+            if (exactMatch) {
+                this.selecionarTrabalho(exactMatch);
+                return;
+            }
+        }
+
+        // Se tiver apenas 1 resultado na lista atual, abre ele
+        if (this.resultadosPesquisa.length === 1) {
+            this.selecionarTrabalho(this.resultadosPesquisa[0]);
+            return;
+        }
+
+        // Se a busca ainda não retornou resultados ou lista está vazia, busca agora
+        if (!this.resultadosPesquisa.length) {
+            this.buscando = true;
+            try {
+                const res = await pesquisarTrabalhos(termo);
+                this.resultadosPesquisa = Array.isArray(res?.data) ? res.data : [];
+                this.mostrarResultados = true;
+
+                if (this.resultadosPesquisa.length === 1) {
+                    this.selecionarTrabalho(this.resultadosPesquisa[0]);
+                }
+            } catch (e) {
+                console.error(e);
+            } finally {
+                this.buscando = false;
+            }
+        } else {
+            this.mostrarResultados = true;
+        }
+    }
+
+    selecionarTrabalho(trabalho: any): void {
+        this.mostrarResultados = false;
+        const idPaciente = trabalho.idPaciente || trabalho.paciente?.idPaciente;
+
+        if (idPaciente) {
+            const targetUrl = `/l/paciente/edit/${idPaciente}`;
+            const currentUrl = this.router.url;
+
+            if (currentUrl === targetUrl) {
+                this.router.navigateByUrl('/', { skipLocationChange: true }).then(() => {
+                    this.router.navigate([targetUrl]);
+                });
+            } else {
+                this.router.navigate([targetUrl]);
+            }
+            this.pesquisaTrabalhoId = '';
+            this.resultadosPesquisa = [];
+        } else {
+            this.snackBar.open('Trabalho encontrado, mas sem paciente associado.', 'Fechar', {
+                duration: 3000,
+                horizontalPosition: 'right',
+                verticalPosition: 'top'
+            });
+        }
+    }
+
+    apenasNumeros(event: KeyboardEvent): boolean {
+        // Mantido por compatibilidade
+        return true;
+    }
+
+    async buscarTrabalhoPorId(): Promise<void> {
+        return this.executarPesquisaEnter();
     }
 
 }

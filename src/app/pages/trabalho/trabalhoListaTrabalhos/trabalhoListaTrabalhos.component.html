@@ -1,13 +1,29 @@
 <mat-card class="mb-25 tagus-card filaEspera">
   <mat-card-header>
-    <h5 class="mb-0">{{nomeLista}}</h5>
+    <h5 class="mb-0 d-flex align-items-center gap-2">
+      <span>{{ getStatusLabel(nomeLista) }}</span>
+      <span class="status-count-pill" *ngIf="listaTrabalhos.data.length > 0">{{ listaTrabalhos.data.length }}</span>
+    </h5>
   </mat-card-header>
 
-  <mat-card-content class="semDadosTrabalhoPendente" *ngIf="listaTrabalhos.data.length == 0">
-    <h3>Nenhum trabalho {{nomeLista}}</h3>
+  <!-- Carregando sutil inicial -->
+  <mat-card-content class="py-2" *ngIf="carregando && listaTrabalhos.data.length == 0">
+    <div class="empty-status-compact">
+      <mat-icon class="empty-icon text-muted">autorenew</mat-icon>
+      <span class="text-muted">Carregando dados de <strong>{{ getStatusLabel(nomeLista) }}</strong>...</span>
+    </div>
+  </mat-card-content>
+
+  <!-- Estado Vazio Discreto -->
+  <mat-card-content class="semDadosTrabalhoPendente" *ngIf="!carregando && listaTrabalhos.data.length == 0">
+    <div class="empty-status-compact">
+      <mat-icon class="empty-icon">inbox</mat-icon>
+      <span>Nenhum trabalho em <strong>{{ getStatusLabel(nomeLista) }}</strong></span>
+    </div>
   </mat-card-content>
 
   <mat-card-content *ngIf="listaTrabalhos.data.length != 0">
+      <!-- Tabela Única e Responsiva (com scroll horizontal suave no celular, sem quadrados) -->
       <div class="mat-elevation-z8 tagus-mat-table">
           <table mat-table [dataSource]="listaTrabalhos">
 
@@ -44,30 +60,55 @@
                   <td mat-cell *matCellDef="let element">{{element.dataInclusao | date:'dd/MM/yyyy' }}</td>
               </ng-container>
 
+              <!-- Data/Hora Envio Column -->
+              <ng-container matColumnDef="dataHoraEnvio">
+                  <th mat-header-cell *matHeaderCellDef>Data e Hora de Envio</th>
+                  <td mat-cell *matCellDef="let element">
+                    <span *ngIf="element.dataHoraEnvio || element.dataConclusao" class="fw-semibold text-dark">
+                      {{ (element.dataHoraEnvio || element.dataConclusao) | date:'dd/MM/yyyy HH:mm' }}
+                    </span>
+                    <span *ngIf="!element.dataHoraEnvio && !element.dataConclusao" class="text-muted">-</span>
+                  </td>
+              </ng-container>
+
               <!-- Status Column -->
               <ng-container matColumnDef="status">
                   <th mat-header-cell *matHeaderCellDef>Status</th>
                   <td mat-cell *matCellDef="let element">
-                    <span class="badge pendente" *ngIf="element.status == 'PENDENTE'">{{element.status}}</span>
-                    <span class="badge modeling" *ngIf="element.status == 'MODELAGEM'">{{element.status}}</span>
-                    <span class="badge impressao_prova" *ngIf="element.status == 'IMPRESSAO_PROVA'">{{element.status}}</span>
-                    <span class="badge impressao_carga_ceramica" *ngIf="element.status == 'IMPRESSAO_CARGA_CERAMICA'">{{element.status}}</span>
-                    <span class="badge impressao_biosplint_placa" *ngIf="element.status == 'IMPRESSAO_BIOSPLINT_PLACA'">{{element.status}}</span>
-                    <span class="badge fresagem" *ngIf="element.status == 'FRESAGEM'">{{element.status}}</span>
-                    <span class="badge sintetizacao" *ngIf="element.status == 'SINTERIZACAO'">{{element.status}}</span>
-                    <span class="badge maquiagem" *ngIf="element.status == 'MAQUIAGEM'">{{element.status}}</span>
-                    <span class="badge aguardando_componente" *ngIf="element.status == 'AGUARDANDO_COMPONENTE'">{{element.status}}</span>
-                    <span class="badge pacote" *ngIf="element.status == 'PACOTE'">{{element.status}}</span>
-                    <span class="badge aguardando_coleta" *ngIf="element.status == 'AGUARDANDO_COLETA'">{{element.status}}</span>
-                    <span class="badge enviado" *ngIf="element.status == 'ENVIADO'">{{element.status}}</span>
-                    <span class="badge enviado" *ngIf="element.status == 'ENVIADO_PROVA'">{{element.status}}</span>
-                    <span class="badge pagamento_recebido" *ngIf="element.status == 'PAGAMENTO_RECEBIDO'">{{element.status}}</span>
-                    <span class="badge cancelado" *ngIf="element.status == 'CANCELADO'">{{element.status}}</span>
+                    <span class="badge pendente" *ngIf="element.status == 'PENDENTE'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge modeling" *ngIf="element.status == 'MODELAGEM'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge impressao_prova" *ngIf="element.status == 'IMPRESSAO_PROVA'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge impressao_carga_ceramica" *ngIf="element.status == 'IMPRESSAO_CARGA_CERAMICA'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge impressao_biosplint_placa" *ngIf="element.status == 'IMPRESSAO_BIOSPLINT_PLACA'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge fresagem" *ngIf="element.status == 'FRESAGEM'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge sintetizacao" *ngIf="element.status == 'SINTERIZACAO'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge maquiagem" *ngIf="element.status == 'MAQUIAGEM'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge aguardando_componente" *ngIf="element.status == 'AGUARDANDO_COMPONENTE'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge pacote" *ngIf="element.status == 'PACOTE'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge aguardando_coleta" *ngIf="element.status == 'AGUARDANDO_COLETA'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge enviado" *ngIf="element.status == 'ENVIADO'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge enviado" *ngIf="element.status == 'ENVIADO_PROVA'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge pagamento_recebido" *ngIf="element.status == 'PAGAMENTO_RECEBIDO'">{{ getStatusLabel(element.status) }}</span>
+                    <span class="badge cancelado" *ngIf="element.status == 'CANCELADO'">{{ getStatusLabel(element.status) }}</span>
+                  </td>
+              </ng-container>
+
+              <!-- Ações (apenas para tela de Concluídos) -->
+              <ng-container matColumnDef="acoes" *ngIf="ehListaConcluidos">
+                  <th mat-header-cell *matHeaderCellDef class="text-center" style="width: 100px;">Ações</th>
+                  <td mat-cell *matCellDef="let element" class="text-center" (click)="$event.stopPropagation()">
+                    <button 
+                      mat-icon-button 
+                      [color]="element.ocultoConcluido ? 'primary' : 'warn'"
+                      (click)="alternarOcultar(element, $event)"
+                      [matTooltip]="element.ocultoConcluido ? 'Restaurar para a lista de Concluídos' : 'Tirar da página de Concluídos (não apaga do sistema)'">
+                      <mat-icon>{{ element.ocultoConcluido ? 'visibility' : 'visibility_off' }}</mat-icon>
+                    </button>
                   </td>
               </ng-container>
 
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="abrirDetalhesTrabalho(row)"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="abrirDetalhesTrabalho(row)" class="cursor-pointer row-hover"></tr>
           </table>
       </div>
   </mat-card-content>

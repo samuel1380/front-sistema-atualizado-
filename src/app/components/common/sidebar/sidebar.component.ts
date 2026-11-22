@@ -22,13 +22,23 @@ export class SidebarComponent {
         this.toggleService.isToggled$.subscribe(isToggled => {
             this.isToggled = isToggled;
         });
-        this.toggleService.isToggled$.subscribe(isToggled => {
-            this.isToggled = isToggled;
-        });
     }
 
     toggle() {
         this.toggleService.toggle();
+    }
+
+    fecharMobile() {
+        if (typeof window !== 'undefined' && window.innerWidth < 992) {
+            this.toggleService.setToggleStatus(false);
+        }
+    }
+
+    onSidebarClick(event: MouseEvent) {
+        const target = event.target as HTMLElement;
+        if (target && target.closest('.sidemenu-link, a[routerLink]')) {
+            this.fecharMobile();
+        }
     }
 
     toggleSidebarTheme() {

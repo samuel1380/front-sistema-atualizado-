@@ -202,6 +202,8 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
       ),
       cor: [trabalho.cor || ''],
       status: [trabalho.status || 'PENDENTE'],
+      dataHoraEnvio: [trabalho.dataHoraEnvio || null],
+      dataConclusao: [trabalho.dataConclusao || null],
       componentes: this.fb.array([]), // Será populado separadamente para lidar com qtdItems
       observacao: [trabalho.observacao || ''],
       anotacoes: [trabalho.anotacoes || ''],
@@ -740,7 +742,7 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
       });
 
       const corpoTabela: any[] = [
-        ['Data Conclusão', 'Elementos Dentais', 'Serviços', 'Status', 'Valor']
+        ['Data/Hora Envio', 'Elementos Dentais', 'Serviços', 'Status', 'Valor']
       ];
 
       trabalhosOrdenados.forEach((trabalho: any) => {
@@ -773,8 +775,9 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
           ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valorTrabalho)
           : '-';
 
-        const dataConclusao = trabalho.dataConclusao
-          ? new Date(trabalho.dataConclusao).toLocaleDateString('pt-BR')
+        const dataEnvioVal = trabalho.dataHoraEnvio || trabalho.dataConclusao;
+        const dataConclusao = dataEnvioVal
+          ? new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(dataEnvioVal))
           : '-';
 
         corpoTabela.push([

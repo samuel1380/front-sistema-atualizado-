@@ -1,3 +1,32 @@
+.sidebar-mobile-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(10, 15, 29, 0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 1040;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+}
+
+@media only screen and (max-width: 991px) {
+    .sidebar-mobile-backdrop {
+        display: block;
+    }
+}
+
 .main-content {
     overflow: hidden;
     min-height: 100vh;

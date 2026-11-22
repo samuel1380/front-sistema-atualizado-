@@ -8,6 +8,7 @@ import { CustomizerSettingsService } from './pages/externalComponents/customizer
   styleUrls: ['./app.component.sass']
 })
 export class AppComponent implements OnInit {
+    title = 'ang-odontoprint';
 
     constructor(
         private readonly _sessionExpiry: SessionExpiryMonitorService,

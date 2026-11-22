@@ -5,6 +5,13 @@
     [class.card-border-radius]="themeService.isCardBorderRadius()"
     [class.rtl-enabled]="themeService.isRTLEnabled()"
 >
+    <!-- Overlay/Backdrop escuro para mobile quando a sidebar está aberta -->
+    <div 
+        class="sidebar-mobile-backdrop" 
+        [class.show]="isToggled" 
+        (click)="fecharSidebarMobile()" 
+        aria-hidden="true">
+    </div>
     <app-sidebar></app-sidebar>
     <div
         class="main-content d-flex flex-column"

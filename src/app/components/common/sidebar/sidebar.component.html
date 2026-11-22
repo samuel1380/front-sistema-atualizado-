@@ -6,11 +6,14 @@
     [class.right-sidebar]="themeService.isRightSidebar()"
     [class.hide-sidebar]="themeService.isHideSidebar()"
 >
-    <div class="logo bg-white">
-        <a routerLink="/" class="d-flex align-items-center">
+    <div class="logo bg-white d-flex align-items-center justify-content-between">
+        <a routerLink="/" (click)="fecharMobile()" class="d-flex align-items-center">
             <img src="assets/img/icone-odontoprint-50x50.png" alt="logo">
             <span>Odontoprint</span>
         </a>
+        <button type="button" class="mobile-drawer-close-btn d-lg-none" (click)="fecharMobile()" aria-label="Fechar menu" title="Fechar menu">
+            <mat-icon>close</mat-icon>
+        </button>
     </div>
     <div class="burger-menu" (click)="toggle()" [ngClass]="{'active': isToggled}">
         <span class="top-bar"></span>
@@ -18,7 +21,7 @@
         <span class="bottom-bar"></span>
     </div>
     <ng-scrollbar visibility="hover" style="height: 100vh;">
-        <div class="sidebar-inner">
+        <div class="sidebar-inner" (click)="onSidebarClick($event)">
             <div class="sidebar-menu">
                 <mat-accordion>
                     <mat-expansion-panel (opened)="panelOpenState = true" (closed)="panelOpenState = true" *ngIf="permite(['admin', 'producao', 'vendas', 'financeiro'])">

@@ -103,6 +103,12 @@
                           {{trabalho.get('status')?.value}} <span *ngIf="trabalho.get('retrabalho')?.value" style="font-weight: bold; color: red;">(Retrabalho) </span>
                         </span>
                       </h4>
+                      <div *ngIf="trabalho.get('dataHoraEnvio')?.value || trabalho.get('dataConclusao')?.value" class="mb-2">
+                        <strong>Data e Hora de Envio:</strong>
+                        <span class="badge bg-success text-white ms-1">
+                          {{ (trabalho.get('dataHoraEnvio')?.value || trabalho.get('dataConclusao')?.value) | date:'dd/MM/yyyy HH:mm' }}
+                        </span>
+                      </div>
                       <div><strong>Serviços:</strong>
                         <span *ngFor="let servico of trabalho.get('servicos')?.value; let isLast = last">
                           {{ getNomeProduto(servico) }}{{ !isLast ? ', ' : '' }}

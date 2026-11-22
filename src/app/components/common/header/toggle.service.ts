@@ -16,4 +16,8 @@ export class ToggleService {
         this.isToggled.next(!this.isToggled.value);
     }
 
+    setToggleStatus(status: boolean) {
+        this.isToggled.next(status);
+    }
+
 }

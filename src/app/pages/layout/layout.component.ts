@@ -1,5 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 import { CustomizerSettingsService } from '../externalComponents/customizer-settings/customizer-settings.service';
 import { ToggleService } from '../../components/common/header/toggle.service';
 import { AuthUserService } from '../../serviceStorage/authUser.service';
@@ -29,7 +30,30 @@ export class LayoutComponent implements OnInit {
 
     this.toggleService.isToggled$.subscribe(isToggled => {
       this.isToggled = isToggled;
+      if (typeof document !== 'undefined') {
+        if (isToggled && typeof window !== 'undefined' && window.innerWidth < 992) {
+          document.body.classList.add('mobile-drawer-open');
+        } else {
+          document.body.classList.remove('mobile-drawer-open');
+        }
+      }
     });
+
+    // Fecha a sidebar automaticamente ao navegar em telas mobile/tablet
+    this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe(() => {
+      if (typeof window !== 'undefined' && window.innerWidth < 992 && this.isToggled) {
+        this.toggleService.setToggleStatus(false);
+      }
+      if (typeof document !== 'undefined') {
+        document.body.classList.remove('mobile-drawer-open');
+      }
+    });
+  }
+
+  fecharSidebarMobile() {
+    this.toggleService.setToggleStatus(false);
   }
 
   ngOnInit(): void {
