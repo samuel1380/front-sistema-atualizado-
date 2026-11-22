@@ -20,7 +20,7 @@
                     {{element[coluna.coluna] | currency : coluna.price}}
                   </span>
                   <span *ngIf="coluna.date">
-                    {{element[coluna.coluna] | date: 'dd/MM/yyyy' }}
+                    {{element[coluna.coluna] | date: 'dd/MM/yyyy' : (coluna.timezone || 'UTC') }}
                   </span>
                   <span *ngIf="coluna.datetime">
                     {{element[coluna.coluna] | date: 'dd/MM/yyyy HH:mm' }}

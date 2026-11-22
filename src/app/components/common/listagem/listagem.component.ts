@@ -55,6 +55,7 @@ export interface ColumnsInterface {
   price?: string;
   date?: boolean;
   datetime?: boolean;
+  timezone?: string;
   /** Quando true, renderiza o ícone do WhatsApp ao lado do valor da célula. */
   whatsapp?: boolean;
   /** Nome do campo no objeto que contém o número de telefone para WhatsApp. Padrão: 'telefoneFinanceiro' */

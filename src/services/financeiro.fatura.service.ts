@@ -265,6 +265,15 @@ export class FaturaService {
   }
 
   /**
+   * Reorganiza faturas e trabalhos no mês correto de competência.
+   * Corresponde a: POST /financeiro/faturas/organizar-mes-correto
+   */
+  organizarFaturasNoMesCorreto(idEmpresa?: number): Observable<any> {
+    const params = idEmpresa ? new HttpParams().set('idEmpresa', idEmpresa.toString()) : undefined;
+    return this.http.post<any>(`${this.apiUrl}/organizar-mes-correto`, {}, { headers: this.getAuthHeaders(), params });
+  }
+
+  /**
    * Fecha uma fatura específica.
    * Corresponde a: POST /financeiro/faturas/:idFatura/fechar
    */

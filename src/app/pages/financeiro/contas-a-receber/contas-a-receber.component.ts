@@ -37,6 +37,7 @@ export class ContasAReceberComponent {
 
   displayedColumnsLancamento: any[] = [
     { coluna: 'dataEmissao', titulo: 'Data Emissão', date: true },
+    { coluna: 'dataCompetencia', titulo: 'Competência', date: true },
     { coluna: 'dataVencimento', titulo: 'Data Vencimento', date: true },
     { coluna: 'descricao', titulo: 'Descrição' },
     { coluna: 'categoriaExibicao', titulo: 'Categoria' },
@@ -62,6 +63,7 @@ export class ContasAReceberComponent {
 
   anoControl = new FormControl<number>(new Date().getFullYear());
   mesControl = new FormControl<number>(new Date().getMonth() + 1);
+  filtroDataControl = new FormControl<'competencia' | 'vencimento'>('competencia');
   statusControl = new FormControl<string | null>(null);
   categoriaPaiControl = new FormControl<number | null>(null);
   subcategoriaControl = new FormControl<number | null>(null);
@@ -88,6 +90,7 @@ export class ContasAReceberComponent {
     combineLatest([
       this.anoControl.valueChanges.pipe(startWith(this.anoControl.value)),
       this.mesControl.valueChanges.pipe(startWith(this.mesControl.value)),
+      this.filtroDataControl.valueChanges.pipe(startWith(this.filtroDataControl.value)),
       this.statusControl.valueChanges.pipe(startWith(this.statusControl.value)),
       this.categoriaPaiControl.valueChanges.pipe(startWith(this.categoriaPaiControl.value)),
       this.subcategoriaControl.valueChanges.pipe(startWith(this.subcategoriaControl.value)),
@@ -132,6 +135,7 @@ export class ContasAReceberComponent {
       statusParcela: this.statusControl.value || undefined,
       idCategoriaPai: this.categoriaPaiControl.value || undefined,
       idCategoria: this.subcategoriaControl.value || undefined,
+      filtroData: this.filtroDataControl.value || 'competencia',
     };
     buscarLancamentos(query).then((response: any) => {
       if (response.status === 200) {

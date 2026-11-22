@@ -52,6 +52,7 @@ export class FaturaComponent implements OnInit, OnDestroy {
   displayedColumnsWithActions: string[] = [
     'idFatura',
     'nomeEmpresa',
+    'competencia',
     'dataVencimento',
     'valorTotal',
     'status',
@@ -187,6 +188,31 @@ export class FaturaComponent implements OnInit, OnDestroy {
         error: (err) => {
           console.error('Erro ao gerar faturas recorrentes', err);
           this.snackBar.open('Falha ao gerar faturas recorrentes.', 'Fechar', { duration: 3000 });
+        }
+      });
+  }
+
+  organizarFaturas() {
+    const msg = 'Deseja reorganizar todas as faturas para garantir que cada trabalho fique no mês correto em que foi concluído? Trabalhos de meses anteriores que estejam em faturas futuras serão movidos para a competência correta.';
+    if (!confirm(msg)) {
+      return;
+    }
+
+    const idEmpresa = this.empresaFilter.value || undefined;
+    this.faturaService.organizarFaturasNoMesCorreto(idEmpresa)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.snackBar.open(
+            `Organização concluída! ${res.ordensMovidas} OS(s) reorganizada(s) em ${res.faturasAjustadas} fatura(s).`,
+            'Fechar',
+            { duration: 5000 }
+          );
+          this.buscar();
+        },
+        error: (err) => {
+          console.error('Erro ao organizar faturas', err);
+          this.snackBar.open(err?.error?.message || 'Falha ao organizar faturas.', 'Fechar', { duration: 4000 });
         }
       });
   }
@@ -382,7 +408,7 @@ export class FaturaComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const dataVencimento = this.datePipe.transform(fatura.dataVencimento, 'dd/MM/yyyy');
+    const dataVencimento = this.datePipe.transform(fatura.dataVencimento, 'dd/MM/yyyy', 'UTC');
     const valor = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(parseFloat(fatura.valorTotal));
     const linkBoleto = `https://seu-dominio.com/boleto/${fatura.id}`; // <-- ATENÇÃO: Ajuste este link
     const mensagem = `Olá! Segue o resumo da sua fatura:\n\n*Fatura ID:* ${fatura.id}\n*Vencimento:* ${dataVencimento}\n*Valor:* ${valor}\n\nPara pagar, acesse o link do boleto: ${linkBoleto}`;

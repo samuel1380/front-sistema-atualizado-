@@ -54,7 +54,7 @@
         <mat-label>Fatura de Destino</mat-label>
         <mat-select [(ngModel)]="idFaturaSelecionada">
           <mat-option *ngFor="let f of faturasDisponiveis" [value]="f.idFatura">
-            Fatura #{{ f.idFatura }} - {{ f.dataInicio | date:'MM/yyyy' }} (Total: {{ f.valorTotal | currency:'BRL' }})
+            Fatura #{{ f.idFatura }} - {{ f.dataInicio | date:'MM/yyyy':'UTC' }} (Total: {{ f.valorTotal | currency:'BRL' }})
           </mat-option>
         </mat-select>
       </mat-form-field>

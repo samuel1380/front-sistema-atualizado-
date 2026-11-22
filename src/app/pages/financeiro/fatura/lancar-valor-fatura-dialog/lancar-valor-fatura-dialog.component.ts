@@ -56,10 +56,19 @@ export class LancarValorFaturaDialogComponent implements OnInit {
         valorTotal: this.valorRestante > 0 ? this.valorRestante : 0,
       });
 
-      // Initialize first parcela on the 20th of the current month
-      const hoje = new Date();
-      const data20 = new Date(hoje.getFullYear(), hoje.getMonth(), 20, 12, 0, 0);
-      const dataVencimentoStr = data20.toISOString().split('T')[0];
+      // Inicializa a primeira parcela com a data de vencimento da fatura (ou dia 20 do mês seguinte)
+      let dataVencimentoStr = '';
+      if (this.fatura?.dataVencimento) {
+        const raw = String(this.fatura.dataVencimento).split('T')[0];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+          dataVencimentoStr = raw;
+        }
+      }
+      if (!dataVencimentoStr) {
+        const hoje = new Date();
+        const data20 = new Date(hoje.getFullYear(), hoje.getMonth(), 20, 12, 0, 0);
+        dataVencimentoStr = data20.toISOString().split('T')[0];
+      }
 
       this.parcelasEditaveis = [
         { valor: this.valorRestante > 0 ? this.valorRestante : 0, dataVencimentoStr }
