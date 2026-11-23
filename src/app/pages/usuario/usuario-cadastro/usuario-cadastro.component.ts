@@ -36,7 +36,8 @@ export class UsuarioCadastroComponent implements OnInit {
       permissoes: new FormControl([], [Validators.required]),
       ativo: new FormControl(true),
       bloqueado: new FormControl(false),
-      idEmpresa: new FormControl(null)
+      idEmpresa: new FormControl(null),
+      senha: new FormControl('')
     });
   }
 
@@ -102,7 +103,8 @@ export class UsuarioCadastroComponent implements OnInit {
         permissoes: formValue.permissoes || [],
         ativo: formValue.ativo !== undefined ? formValue.ativo : true,
         bloqueado: formValue.bloqueado !== undefined ? formValue.bloqueado : false,
-        idEmpresa: formValue.idEmpresa || undefined
+        idEmpresa: formValue.idEmpresa || undefined,
+        senha: formValue.senha ? formValue.senha.trim() : undefined
       };
 
       this.usuarioService.criarUsuario(createDto).subscribe({

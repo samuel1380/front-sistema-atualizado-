@@ -1,0 +1,122 @@
+<div class="mb-25 tagus-card">
+  <mat-card>
+    <mat-card-header class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="mb-0 d-flex align-items-center gap-2">
+        <mat-icon color="primary">key</mat-icon>
+        Definir Senha do Usuário
+      </h5>
+      <button mat-icon-button (click)="cancelar()" *ngIf="!loading">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Informações do Usuário -->
+      <div class="user-info-box p-3 mb-3">
+        <div><strong>Nome:</strong> {{ usuario.nome }}</div>
+        <div class="text-muted"><small><strong>Email:</strong> {{ usuario.email }}</small></div>
+      </div>
+
+      <!-- Formulário de Definição de Senha -->
+      <div *ngIf="!sucesso">
+        <div class="mb-3">
+          <label class="d-block mb-2 text-muted fw-bold">Como deseja definir a senha?</label>
+          <mat-radio-group [(ngModel)]="modo" class="d-flex flex-column gap-2 mb-3">
+            <mat-radio-button value="manual" color="primary">
+              Digitar uma senha personalizada
+            </mat-radio-button>
+            <mat-radio-button value="automatica" color="primary">
+              Gerar senha aleatória pelo sistema
+            </mat-radio-button>
+          </mat-radio-group>
+        </div>
+
+        <!-- MODO MANUAL -->
+        <div *ngIf="modo === 'manual'">
+          <form [formGroup]="senhaForm">
+            <div class="row">
+              <div class="col-12">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Nova Senha</mat-label>
+                  <input matInput [type]="hideNova ? 'password' : 'text'" formControlName="novaSenha" placeholder="Digite a nova senha desejada">
+                  <button mat-icon-button matSuffix type="button" (click)="hideNova = !hideNova" [attr.aria-label]="'Alternar visibilidade'">
+                    <mat-icon>{{ hideNova ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="senhaForm.get('novaSenha')?.hasError('required')">
+                    A senha é obrigatória
+                  </mat-error>
+                  <mat-error *ngIf="senhaForm.get('novaSenha')?.hasError('minlength')">
+                    Mínimo de 4 caracteres
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12">
+                <mat-form-field class="w-100" appearance="outline">
+                  <mat-label>Confirmar Nova Senha</mat-label>
+                  <input matInput [type]="hideConfirmar ? 'password' : 'text'" formControlName="confirmarSenha" placeholder="Repita a nova senha">
+                  <button mat-icon-button matSuffix type="button" (click)="hideConfirmar = !hideConfirmar" [attr.aria-label]="'Alternar visibilidade'">
+                    <mat-icon>{{ hideConfirmar ? 'visibility_off' : 'visibility' }}</mat-icon>
+                  </button>
+                  <mat-error *ngIf="senhaForm.get('confirmarSenha')?.hasError('required')">
+                    Confirmação de senha é obrigatória
+                  </mat-error>
+                  <mat-error *ngIf="senhaForm.hasError('senhasDiferentes') && senhaForm.get('confirmarSenha')?.touched">
+                    As senhas não coincidem
+                  </mat-error>
+                </mat-form-field>
+              </div>
+
+              <div class="col-12 mb-3">
+                <button mat-stroked-button color="accent" type="button" (click)="gerarSugestao()">
+                  <mat-icon>autorenew</mat-icon>
+                  Sugerir Senha Forte
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- MODO AUTOMATICA -->
+        <div *ngIf="modo === 'automatica'" class="p-3 mb-3 rounded" style="background: rgba(33, 150, 243, 0.1); border-left: 4px solid #2196f3;">
+          <div class="d-flex align-items-center">
+            <mat-icon color="primary" class="me-2">info</mat-icon>
+            <div>
+              Uma senha segura e aleatória será criada automaticamente pelo sistema e exibida na tela seguinte para você copiar.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TELA DE SUCESSO -->
+      <div *ngIf="sucesso" class="text-center py-3">
+        <mat-icon color="primary" style="font-size: 48px; height: 48px; width: 48px;">check_circle</mat-icon>
+        <h5 class="mt-2 mb-2">Senha definida com sucesso!</h5>
+        <p class="text-muted mb-3">A nova senha configurada para o usuário é:</p>
+
+        <div class="password-display-box d-flex align-items-center justify-content-center gap-3 p-3 mb-3">
+          <span>{{ senhaDefinida }}</span>
+          <button mat-icon-button color="primary" (click)="copiarSenha()" title="Copiar Senha">
+            <mat-icon>content_copy</mat-icon>
+          </button>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="cancelar()">
+          Concluir e Fechar
+        </button>
+      </div>
+    </mat-card-content>
+
+    <mat-card-actions align="end" *ngIf="!sucesso">
+      <button mat-button (click)="cancelar()" [disabled]="loading">Cancelar</button>
+      <button 
+        mat-raised-button 
+        color="primary" 
+        [disabled]="loading || (modo === 'manual' && senhaForm.invalid)" 
+        (click)="salvar()">
+        <span *ngIf="!loading">Salvar Senha</span>
+        <mat-spinner *ngIf="loading" diameter="24"></mat-spinner>
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>

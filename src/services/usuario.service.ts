@@ -38,6 +38,7 @@ export interface CreateUsuarioDto {
   ativo?: boolean;
   bloqueado?: boolean;
   idEmpresa?: number;
+  senha?: string;
 }
 
 export interface UpdateUsuarioDto {
@@ -124,8 +125,9 @@ export class UsuarioService {
     });
   }
 
-  resetarSenha(id: number): Observable<{ senhaGerada: string }> {
-    return this.http.post<{ senhaGerada: string }>(`${this.apiUrl}/${id}/reset-password`, {}, { 
+  resetarSenha(id: number, novaSenha?: string): Observable<{ senhaGerada: string }> {
+    const body = (novaSenha && novaSenha.trim().length > 0) ? { novaSenha: novaSenha.trim() } : {};
+    return this.http.post<{ senhaGerada: string }>(`${this.apiUrl}/${id}/reset-password`, body, { 
       headers: this.getAuthHeaders() 
     });
   }

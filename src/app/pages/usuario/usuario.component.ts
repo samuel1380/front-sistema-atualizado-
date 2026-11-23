@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { UsuarioService, Usuario } from 'src/services/usuario.service';
 import { UsuarioCadastroComponent } from './usuario-cadastro/usuario-cadastro.component';
 import { UsuarioPermissoesComponent } from './usuario-permissoes/usuario-permissoes.component';
+import { UsuarioResetarSenhaComponent } from './usuario-resetar-senha/usuario-resetar-senha.component';
 import { ConfirmacaoDialogComponent } from 'src/app/components/common/componentsconfirmacao-dialog.component';
 import { buscarEmpresas } from 'src/services/empresa.service';
 import { FormControl } from '@angular/forms';
@@ -167,25 +168,14 @@ export class UsuarioComponent implements OnInit {
   }
 
   resetarSenha(usuario: Usuario) {
-    const dialogRef = this.dialog.open(ConfirmacaoDialogComponent, {
-      width: '400px',
-      data: {
-        titulo: 'Resetar Senha',
-        mensagem: `Deseja realmente resetar a senha do usuário ${usuario.nome}? Uma nova senha será gerada.`
-      }
+    const dialogRef = this.dialog.open(UsuarioResetarSenhaComponent, {
+      width: '480px',
+      data: usuario
     });
 
-    dialogRef.afterClosed().subscribe(confirmado => {
-      if (confirmado) {
-        this.usuarioService.resetarSenha(usuario.idUsuario).subscribe({
-          next: (res) => {
-            prompt(`Senha do usuário ${usuario.nome} resetada com sucesso!\n\nCopie a nova senha temporária abaixo:`, res.senhaGerada);
-          },
-          error: (err) => {
-            console.error('Erro ao resetar senha', err);
-            this.snackBar.open('Erro ao resetar senha', 'Fechar', { duration: 3000 });
-          }
-        });
+    dialogRef.afterClosed().subscribe(sucesso => {
+      if (sucesso) {
+        this.buscarUsuarios();
       }
     });
   }

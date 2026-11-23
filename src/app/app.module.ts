@@ -156,6 +156,7 @@ import { CapitalComponent } from './pages/financeiro/capital/capital.component';
 import { UsuarioComponent } from './pages/usuario/usuario.component';
 import { UsuarioCadastroComponent } from './pages/usuario/usuario-cadastro/usuario-cadastro.component';
 import { UsuarioPermissoesComponent } from './pages/usuario/usuario-permissoes/usuario-permissoes.component';
+import { UsuarioResetarSenhaComponent } from './pages/usuario/usuario-resetar-senha/usuario-resetar-senha.component';
 import { AporteDialogComponent } from './pages/financeiro/capital/aporte-dialog/aporte-dialog.component';
 import { EmprestimoHistoricoDialogComponent } from './pages/financeiro/capital/emprestimo-historico-dialog/emprestimo-historico-dialog.component';
 import { EmprestimoMovimentacaoDialogComponent } from './pages/financeiro/capital/emprestimo-movimentacao-dialog/emprestimo-movimentacao-dialog.component';
@@ -316,6 +317,7 @@ registerLocaleData(ptBr);
     UsuarioComponent,
     UsuarioCadastroComponent,
     UsuarioPermissoesComponent,
+    UsuarioResetarSenhaComponent,
     LogsComponent,
     LogDetalheDialogComponent
   ],
