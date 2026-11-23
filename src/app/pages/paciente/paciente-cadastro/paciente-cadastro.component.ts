@@ -17,6 +17,7 @@ import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
 import { envFront } from 'src/services/envfile';
+import { ODONTOPRINT_LOGO_BASE64 } from 'src/services/logo-base64';
 
 (pdfMake as any).vfs = pdfFonts;
 
@@ -501,20 +502,22 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
       // Obter observação
       const observacao = trabalho.get('observacao')?.value || '';
 
-      // Carregar logo como base64
-      let logoBase64 = '';
-      try {
-        const logoUrl = `${envFront.BASE_URL}/assets/img/odontoprint-1-color.png`;
-        const response = await fetch(logoUrl);
-        const blob = await response.blob();
-        logoBase64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      } catch (error) {
-        console.warn('Erro ao carregar logo, continuando sem logo:', error);
+      // Carregar logo como base64 (fallback garantido com base64 embutido para evitar problemas de rede/CORS)
+      let logoBase64 = ODONTOPRINT_LOGO_BASE64 || '';
+      if (!logoBase64) {
+        try {
+          const logoUrl = `${envFront.BASE_URL}/assets/img/odontoprint-1-color.png`;
+          const response = await fetch(logoUrl);
+          const blob = await response.blob();
+          logoBase64 = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.onerror = reject;
+            reader.readAsDataURL(blob);
+          });
+        } catch (error) {
+          console.warn('Erro ao carregar logo, continuando sem logo:', error);
+        }
       }
 
       // Gerar QR code com o ID do trabalho
@@ -546,13 +549,13 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
             columns: [
               // Logo (se carregada com sucesso) - centralizada verticalmente
               // Altura aproximada do QR code + ID: 80 (QR) + 2 (margin) + ~12 (texto) = ~94 pontos
-              // Logo com width 120 tem altura proporcional (~45 pontos), margem superior para centralizar: (94-45)/2 ≈ 25
+              // Logo com width 140 tem altura proporcional (~20 pontos), margem superior para centralizar: (94-20)/2 ≈ 37
               ...(logoBase64 ? [{
                 image: logoBase64,
-                width: 150,
+                width: 140,
                 alignment: 'left' as const,
-                margin: [0, 30, 0, 0] as [number, number, number, number] // Margem superior para centralizar verticalmente
-              }] : [{ text: '', width: 120 }]),
+                margin: [0, 35, 0, 0] as [number, number, number, number] // Margem superior para centralizar verticalmente
+              }] : [{ text: '', width: 140 }]),
               // QR Code (se disponível) com ID do trabalho abaixo, alinhado à direita
               ...(qrCodeBase64 ? [{
                 stack: [
@@ -568,12 +571,12 @@ export class PacienteCadastroComponent implements OnInit, OnChanges {
                     alignment: 'center' as const
                   }
                 ],
-                width: 80,
+                width: '*',
                 alignment: 'right' as const,
-                margin: [25, 0, 0, 0] as [number, number, number, number],
-              }] : [{ text: '', width: 80 }])
+                margin: [0, 0, 0, 0] as [number, number, number, number],
+              }] : [{ text: '', width: '*' }])
             ],
-            columnGap: 5,
+            columnGap: 10,
             margin: [0, 0, 0, 5] as [number, number, number, number]
           }] : []),
           // Clínica

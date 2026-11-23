@@ -5,6 +5,7 @@ import * as pdfMake from 'pdfmake/build/pdfmake';
 import * as pdfFonts from 'pdfmake/build/vfs_fonts';
 import { TDocumentDefinitions } from 'pdfmake/interfaces';
 import { envFront } from 'src/services/envfile';
+import { ODONTOPRINT_LOGO_BASE64, ASSINATURA_CAROL_BASE64 } from 'src/services/logo-base64';
 
 (pdfMake as any).vfs = pdfFonts;
 
@@ -85,24 +86,28 @@ export class ReciboPagamentoDialogComponent {
         reader.readAsDataURL(blob);
       });
 
-    let logoBase64 = '';
-    try {
-      const logoUrl = `${envFront.BASE_URL}/assets/img/odontoprint-1-color.png`;
-      const response = await fetch(logoUrl);
-      const blob = await response.blob();
-      logoBase64 = await blobToDataUrl(blob);
-    } catch {
-      // Continua sem logo se falhar o carregamento
+    let logoBase64 = ODONTOPRINT_LOGO_BASE64 || '';
+    if (!logoBase64) {
+      try {
+        const logoUrl = `${envFront.BASE_URL}/assets/img/odontoprint-1-color.png`;
+        const response = await fetch(logoUrl);
+        const blob = await response.blob();
+        logoBase64 = await blobToDataUrl(blob);
+      } catch {
+        // Continua sem logo se falhar o carregamento
+      }
     }
 
-    let assinaturaBase64 = '';
-    try {
-      const assinaturaUrl = `${envFront.BASE_URL}/assets/img/assinatura_carol.png`;
-      const response = await fetch(assinaturaUrl);
-      const blob = await response.blob();
-      assinaturaBase64 = await blobToDataUrl(blob);
-    } catch {
-      // Fallback para linha de assinatura se a imagem não carregar
+    let assinaturaBase64 = ASSINATURA_CAROL_BASE64 || '';
+    if (!assinaturaBase64) {
+      try {
+        const assinaturaUrl = `${envFront.BASE_URL}/assets/img/assinatura_carol.png`;
+        const response = await fetch(assinaturaUrl);
+        const blob = await response.blob();
+        assinaturaBase64 = await blobToDataUrl(blob);
+      } catch {
+        // Fallback para linha de assinatura se a imagem não carregar
+      }
     }
 
     const linhaAssinaturaW = 200;

@@ -5,7 +5,7 @@ export const env = {
 };
 
 export const envFront = {
-  BASE_URL: typeof window !== 'undefined' && window.location.hostname === 'localhost'
-    ? 'http://localhost:4200'
+  BASE_URL: typeof window !== 'undefined'
+    ? window.location.origin
     : 'https://labodontoprint.com.br',
 };
