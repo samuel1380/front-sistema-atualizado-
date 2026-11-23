@@ -192,31 +192,6 @@ export class FaturaComponent implements OnInit, OnDestroy {
       });
   }
 
-  organizarFaturas() {
-    const msg = 'Deseja reorganizar todas as faturas para garantir que cada trabalho fique no mês correto em que foi concluído? Trabalhos de meses anteriores que estejam em faturas futuras serão movidos para a competência correta.';
-    if (!confirm(msg)) {
-      return;
-    }
-
-    const idEmpresa = this.empresaFilter.value || undefined;
-    this.faturaService.organizarFaturasNoMesCorreto(idEmpresa)
-      .pipe(takeUntil(this.destroy$))
-      .subscribe({
-        next: (res) => {
-          this.snackBar.open(
-            `Organização concluída! ${res.ordensMovidas} OS(s) reorganizada(s) em ${res.faturasAjustadas} fatura(s).`,
-            'Fechar',
-            { duration: 5000 }
-          );
-          this.buscar();
-        },
-        error: (err) => {
-          console.error('Erro ao organizar faturas', err);
-          this.snackBar.open(err?.error?.message || 'Falha ao organizar faturas.', 'Fechar', { duration: 4000 });
-        }
-      });
-  }
-
   abrirDetalhesFatura(fatura: Fatura) {
     this.faturaService.buscarFaturaPorId(fatura.idFatura).subscribe({
       next: (faturaDetalhada) => {
