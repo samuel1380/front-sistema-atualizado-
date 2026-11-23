@@ -126,7 +126,11 @@ export class UsuarioService {
   }
 
   resetarSenha(id: number, novaSenha?: string): Observable<{ senhaGerada: string }> {
-    const body = (novaSenha && novaSenha.trim().length > 0) ? { novaSenha: novaSenha.trim() } : {};
+    const body: any = {};
+    if (novaSenha && novaSenha.trim().length > 0) {
+      body.novaSenha = novaSenha.trim();
+      body.senha = novaSenha.trim();
+    }
     return this.http.post<{ senhaGerada: string }>(`${this.apiUrl}/${id}/reset-password`, body, { 
       headers: this.getAuthHeaders() 
     });
