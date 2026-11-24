@@ -1,7 +1,9 @@
 <mat-form-field class="w100" appearance="fill">
   <mat-label>{{titulo}}</mat-label>
   <input [placeholder]="placeholder" #itemInput [formControl]="ItensCtrl"
-      [matChipInputFor]="chipGrid" [matAutocomplete]="auto"
+      [matChipInputFor]="chipGrid"
+      [matAutocomplete]="disableAutocomplete ? null : auto"
+      [matAutocompleteDisabled]="disableAutocomplete"
       [matChipInputSeparatorKeyCodes]="[]"
       (matChipInputTokenEnd)="add($event)"
       (keydown.enter)="keyDown($event)"
@@ -15,8 +17,10 @@
       </mat-chip-row>
   </mat-chip-grid>
   <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)" [autoActiveFirstOption]="true">
-      <mat-option *ngFor="let item of filteredItens | async" [value]="item[nomeIdentificador]">
-          {{item[renderName]}}
-      </mat-option>
+      <ng-container *ngIf="!disableAutocomplete">
+        <mat-option *ngFor="let item of filteredItens | async" [value]="item[nomeIdentificador]">
+            {{item[renderName]}}
+        </mat-option>
+      </ng-container>
   </mat-autocomplete>
 </mat-form-field>

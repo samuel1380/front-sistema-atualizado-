@@ -25,6 +25,7 @@ export class MultipleSelectionComponent implements OnInit, OnChanges {
   @Input() unicItem: boolean = false;
   @Input() onlyList: boolean = false;
   @Input() allowCreateNew: boolean = false; // Permite criar itens novos quando não existem na lista
+  @Input() disableAutocomplete: boolean = false; // Desativa o dropdown/container de opções
   @Input() titulo: string = 'Selecione';
   @Input() placeholder: string = 'Adicionar...';
   @Input() control!: FormControl;
@@ -59,14 +60,16 @@ export class MultipleSelectionComponent implements OnInit, OnChanges {
       (itens: any[]) => {
         this.allItens = itens || [];
 
-        this.filteredItens = this.ItensCtrl.valueChanges.pipe(
-          startWith(null),
-          map((item: any | null) => {
-            const result = (item ? this._filter(item) : this.deduplicateItems(this.allItens));
-            this.filteredItensArray = result;
-            return result;
-          }),
-        );
+        if (!this.disableAutocomplete) {
+          this.filteredItens = this.ItensCtrl.valueChanges.pipe(
+            startWith(null),
+            map((item: any | null) => {
+              const result = (item ? this._filter(item) : this.deduplicateItems(this.allItens));
+              this.filteredItensArray = result;
+              return result;
+            }),
+          );
+        }
       });
 
     this.updateControlValue(false, false);
@@ -145,6 +148,35 @@ export class MultipleSelectionComponent implements OnInit, OnChanges {
     this.isInternalUpdate = false;
   }
 
+  private addSingleItemValue(val: string): void {
+    if (!val) return;
+    const exactMatch = (this.allItens || []).find(item => {
+      const name = (item[this.renderName] || item.nome || '').toString().trim().toLowerCase();
+      return name === val.toLowerCase();
+    }) || (this.filteredItensArray || []).find(item => {
+      const name = (item[this.renderName] || item.nome || '').toString().trim().toLowerCase();
+      return name === val.toLowerCase();
+    });
+
+    if (exactMatch) {
+      this.tryAddItem({
+        [this.nomeIdentificador]: exactMatch[this.nomeIdentificador],
+        [this.renderName]: exactMatch[this.renderName] || exactMatch.nome
+      });
+    } else if (!this.disableAutocomplete && this.filteredItensArray && this.filteredItensArray.length > 0) {
+      const item = this.filteredItensArray[0];
+      this.tryAddItem({
+        [this.nomeIdentificador]: item[this.nomeIdentificador],
+        [this.renderName]: item[this.renderName] || item.nome
+      });
+    } else if (this.allowCreateNew || !this.onlyList) {
+      this.tryAddItem({
+        [this.nomeIdentificador]: null,
+        [this.renderName]: val
+      });
+    }
+  }
+
   keyDown(event: Event): void {
     const keyboardEvent = event as KeyboardEvent;
     keyboardEvent.preventDefault();
@@ -153,38 +185,15 @@ export class MultipleSelectionComponent implements OnInit, OnChanges {
     const rawVal = (this.itemInput?.nativeElement?.value || this.ItensCtrl.value || '').toString().trim();
     if (!rawVal) return;
 
-    // 1. Procura primeiro por correspondência EXATA (case-insensitive)
-    const exactMatch = (this.filteredItensArray || []).find(item => {
-      const val = (item[this.renderName] || item.nome || '').toString().trim().toLowerCase();
-      return val === rawVal.toLowerCase();
-    }) || (this.allItens || []).find(item => {
-      const val = (item[this.renderName] || item.nome || '').toString().trim().toLowerCase();
-      return val === rawVal.toLowerCase();
-    });
-
-    if (exactMatch) {
-      this.tryAddItem({
-        [this.nomeIdentificador]: exactMatch[this.nomeIdentificador],
-        [this.renderName]: exactMatch[this.renderName] || exactMatch.nome
-      });
-    }
-    // 2. Se houver opções filtradas no dropdown, seleciona a primeira
-    else if (this.filteredItensArray && this.filteredItensArray.length > 0) {
-      const item = this.filteredItensArray[0];
-      this.tryAddItem({
-        [this.nomeIdentificador]: item[this.nomeIdentificador],
-        [this.renderName]: item[this.renderName] || item.nome
-      });
-    }
-    // 3. Se allowCreateNew estiver ativo ou !onlyList, adiciona o que o usuário digitou
-    else if (this.allowCreateNew || !this.onlyList) {
-      this.tryAddItem({
-        [this.nomeIdentificador]: null,
-        [this.renderName]: rawVal
-      });
+    if (this.disableAutocomplete && (rawVal.includes(',') || rawVal.includes(' ') || rawVal.includes(';'))) {
+      const parts = rawVal.split(/[,;\s]+/).map(p => p.trim()).filter(p => p.length > 0);
+      for (const part of parts) {
+        this.addSingleItemValue(part);
+      }
+    } else {
+      this.addSingleItemValue(rawVal);
     }
 
-    // Limpa o campo de entrada e fecha o painel do autocomplete
     if (this.itemInput) {
       this.itemInput.nativeElement.value = '';
     }

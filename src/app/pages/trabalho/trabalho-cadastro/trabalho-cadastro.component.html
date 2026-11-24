@@ -55,8 +55,9 @@
                 [itensSelected]="getElementos(getServicoFormGroup(servico))"
                 nomeIdentificador="idElementoTrabalho"
                 renderName="nome"
-                [unicItem]=true
-                [allowCreateNew]=true
+                [unicItem]="true"
+                [allowCreateNew]="true"
+                [disableAutocomplete]="true"
                 titulo="Elementos Dentais"
                 placeholder="Digite o código dos trabalhos"
                 [control]="getElementosControl(getServicoFormGroup(servico))"
