@@ -223,8 +223,8 @@
               <ng-container *ngTemplateOutlet="colunaAnalise; context: { val: dre.margemContribuicaoPorMes[mes] || 0, mes: mes, i: i, obj: dre.margemContribuicaoPorMes, isPercent: false }"></ng-container>
             </ng-container>
             <td style="text-align: right; padding: 0.5rem 0.75rem;">
-              <strong [ngClass]="{'text-success': totalGeralPorMes(dre.resultadoLiquidoPorMes) > 0, 'text-danger': totalGeralPorMes(dre.resultadoLiquidoPorMes) < 0}">
-                {{ totalGeralPorMes(dre.resultadoLiquidoPorMes) | currency:'BRL':'symbol':'1.2-2' }}
+              <strong [ngClass]="{'text-success': totalGeralPorMes(dre.margemContribuicaoPorMes) > 0, 'text-danger': totalGeralPorMes(dre.margemContribuicaoPorMes) < 0}">
+                {{ totalGeralPorMes(dre.margemContribuicaoPorMes) | currency:'BRL':'symbol':'1.2-2' }}
               </strong>
             </td>
           </tr>
@@ -347,8 +347,8 @@
               </strong>
             </td>
             <td style="text-align: right; padding: 0.5rem 0.75rem;">
-              <strong [ngClass]="{'text-success': totalGeralPorMes(dre.resultadoLiquidoPorMes) > 0, 'text-danger': totalGeralPorMes(dre.resultadoLiquidoPorMes) < 0}">
-                {{ totalGeralPorMes(dre.resultadoLiquidoPorMes) | currency:'BRL':'symbol':'1.2-2' }}
+              <strong [ngClass]="{'text-success': totalGeralPorMes(dre.margemContribuicaoPorMes) > 0, 'text-danger': totalGeralPorMes(dre.margemContribuicaoPorMes) < 0}">
+                {{ totalGeralPorMes(dre.margemContribuicaoPorMes) | currency:'BRL':'symbol':'1.2-2' }}
               </strong>
             </td>
           </tr>
