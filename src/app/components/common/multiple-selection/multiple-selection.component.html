@@ -2,7 +2,7 @@
   <mat-label>{{titulo}}</mat-label>
   <input [placeholder]="placeholder" #itemInput [formControl]="ItensCtrl"
       [matChipInputFor]="chipGrid"
-      [matAutocomplete]="disableAutocomplete ? null : auto"
+      [matAutocomplete]="auto"
       [matAutocompleteDisabled]="disableAutocomplete"
       [matChipInputSeparatorKeyCodes]="[]"
       (matChipInputTokenEnd)="add($event)"
