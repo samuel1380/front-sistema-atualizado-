@@ -14,7 +14,7 @@
         </button>
       </mat-chip-row>
   </mat-chip-grid>
-  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)">
+  <mat-autocomplete #auto="matAutocomplete" (optionSelected)="selected($event)" [autoActiveFirstOption]="true">
       <mat-option *ngFor="let item of filteredItens | async" [value]="item[nomeIdentificador]">
           {{item[renderName]}}
       </mat-option>
